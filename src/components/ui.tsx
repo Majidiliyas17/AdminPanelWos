@@ -167,7 +167,7 @@ export interface Column<T> {
   className?: string;
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends object>({
   columns,
   rows,
   rowKey,
@@ -196,7 +196,7 @@ export function DataTable<T extends Record<string, unknown>>({
             <tr key={rowKey(row, i)} className="hover:bg-[#fafafa]">
               {columns.map((c, ci) => (
                 <td key={c.key} className={cn(c.mono && "font-mono text-[11px] text-ink-500", ci === 0 && "font-semibold")}>
-                  {c.render ? c.render(row) : (row[c.key] as ReactNode)}
+                  {c.render ? c.render(row) : ((row as Record<string, ReactNode>)[c.key] ?? "")}
                 </td>
               ))}
             </tr>
@@ -286,3 +286,71 @@ export function ErrorState({ onRetry }: { onRetry?: () => void }) {
     />
   );
 }
+
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={cn("animate-pulse rounded-lg bg-[#f3f4f6]", className)} />;
+}
+
+export function SkeletonTable({ rows = 5, cols = 5 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="space-y-2 p-1">
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} className="flex gap-3">
+          {Array.from({ length: cols }).map((__, c) => (
+            <Skeleton key={c} className="h-4 flex-1" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function Modal({
+  open,
+  onClose,
+  children,
+  width = "max-w-md",
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  width?: string;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-ink-900/40 p-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={cn("w-full rounded-xl bg-white p-5 shadow-[0_20px_50px_rgba(16,24,40,0.2)]", width)}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <label className={cn("block text-[11px] font-semibold text-[#374151]", className)}>
+      {label}
+      {children}
+    </label>
+  );
+}
+
+export const inputClass =
+  "mt-1 h-9 w-full rounded-lg border border-line bg-white px-3 text-[12px] text-ink-900 outline-none focus:border-primary";
