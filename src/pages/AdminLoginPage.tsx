@@ -2,11 +2,12 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Warehouse } from "lucide-react";
 import { useAdminAuth } from "@/lib/auth";
+import { PLATFORM_ACCOUNT } from "@/mocks/platform";
 
 export function AdminLoginPage() {
   const { user, login } = useAdminAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(PLATFORM_ACCOUNT.email);
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function AdminLoginPage() {
       await login(email, password, totpCode || undefined);
       navigate("/dashboard", { replace: true });
     } catch {
-      setError("Sign-in failed. Use the seeded platform account (see SYNC.md) and a valid 2FA code.");
+      setError("Sign-in failed. Use the seeded platform account and a valid 2FA code.");
     } finally {
       setBusy(false);
     }
@@ -30,7 +31,7 @@ export function AdminLoginPage() {
 
   return (
     <div className="grid h-full place-items-center bg-[#f5f6f8] px-6">
-      <form onSubmit={onSubmit} className="w-full max-w-[320px]">
+      <form onSubmit={onSubmit} className="w-full max-w-[320px] pb-12">
         <div className="mb-5 flex flex-col items-center gap-3">
           <span className="grid size-11 place-items-center rounded-xl bg-brand-violet text-white">
             <Warehouse className="size-6" />
@@ -91,6 +92,12 @@ export function AdminLoginPage() {
 
         <p className="mt-4 text-center text-[11px] text-ink-500">Every sign-in is logged and reviewed for security.</p>
       </form>
+
+      <footer className="fixed right-0 bottom-0 left-0 flex h-7 items-center justify-between border-t border-line bg-white px-4 text-[10px] text-ink-500">
+        <span className="font-bold text-ink-900">WarehouseOS</span>
+        <span>Super Admin · Login</span>
+        <span>Page 143 / 158</span>
+      </footer>
     </div>
   );
 }

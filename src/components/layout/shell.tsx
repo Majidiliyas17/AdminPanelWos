@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Activity,
   BadgeCheck,
@@ -10,8 +10,10 @@ import {
   Users,
   Warehouse,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useAdminAuth } from "@/lib/auth";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,7 +26,29 @@ const nav = [
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
+const footerMap: Array<{ match: (path: string) => boolean; label: string; page: number }> = [
+  { match: (p) => p === "/dashboard", label: "Dashboard", page: 144 },
+  { match: (p) => p.startsWith("/approvals") && p.includes("/provision"), label: "Approve & Provision Tenant", page: 147 },
+  { match: (p) => p.startsWith("/approvals/"), label: "Request Details", page: 146 },
+  { match: (p) => p === "/approvals", label: "Approval Queue", page: 145 },
+  { match: (p) => p.startsWith("/tenants/"), label: "Tenant Details", page: 149 },
+  { match: (p) => p === "/tenants", label: "Tenant List", page: 148 },
+  { match: (p) => p === "/billing", label: "Billing & Plans", page: 151 },
+  { match: (p) => p === "/feature-flags", label: "Feature Flags", page: 152 },
+  { match: (p) => p === "/users", label: "Platform Users & Roles", page: 153 },
+  { match: (p) => p === "/audit-log", label: "Platform Audit Log", page: 154 },
+  { match: (p) => p === "/settings", label: "Console Settings", page: 155 },
+];
+
 export function Sidebar() {
+  const { user, logout } = useAdminAuth();
+  const initials = (user?.name || "Riya Kapoor")
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <aside className="flex w-[176px] shrink-0 flex-col bg-sidebar">
       <div className="flex items-center gap-2 px-4 pt-4 pb-3">
@@ -67,12 +91,23 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="mx-3 mb-3 mt-2 flex items-center gap-2 border-t border-[#322c58] pt-3">
-        <span className="grid size-6 place-items-center rounded-full bg-violet-tint text-[10px] font-bold text-brand-violet">RK</span>
-        <span>
-          <span className="block text-[11px] font-semibold text-white">Riya Kapoor</span>
-          <span className="block text-[9px] text-ink-muted">Super Admin</span>
-        </span>
+      <div className="mx-3 mb-3 mt-2 border-t border-[#322c58] pt-3">
+        <div className="flex items-center gap-2">
+          <span className="grid size-6 place-items-center rounded-full bg-violet-tint text-[10px] font-bold text-brand-violet">
+            {initials}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[11px] font-semibold text-white">{user?.name || "Riya Kapoor"}</span>
+            <span className="block text-[9px] text-ink-muted">Super Admin</span>
+          </span>
+          <button
+            onClick={logout}
+            title="Sign out"
+            className="grid size-6 place-items-center rounded-md text-ink-muted hover:bg-sidebar-active hover:text-white"
+          >
+            <LogOut className="size-3.5" />
+          </button>
+        </div>
       </div>
     </aside>
   );
@@ -113,6 +148,18 @@ export function Topbar() {
   );
 }
 
+export function ConsoleFooter() {
+  const { pathname } = useLocation();
+  const entry = footerMap.find((item) => item.match(pathname));
+  return (
+    <footer className="flex h-7 shrink-0 items-center justify-between border-t border-line bg-white px-4 text-[10px] text-ink-500">
+      <span className="font-bold text-ink-900">WarehouseOS</span>
+      <span>Platform Console · {entry?.label ?? "Console"}</span>
+      <span>Page {entry?.page ?? "—"} / 158</span>
+    </footer>
+  );
+}
+
 export function AppShell() {
   return (
     <div className="flex h-full">
@@ -122,11 +169,7 @@ export function AppShell() {
         <main className="flex-1 overflow-y-auto bg-canvas">
           <Outlet />
         </main>
-        <footer className="flex h-7 shrink-0 items-center justify-between border-t border-line bg-white px-4 text-[10px] text-ink-500">
-          <span className="font-bold text-ink-900">WarehouseOS</span>
-          <span>Platform Console</span>
-          <span />
-        </footer>
+        <ConsoleFooter />
       </div>
     </div>
   );
