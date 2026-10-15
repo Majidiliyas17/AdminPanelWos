@@ -2,101 +2,19 @@ import { Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/layout/shell";
 import { RequireAdminAuth } from "@/lib/auth";
 import { AdminLoginPage } from "@/pages/AdminLoginPage";
-import { Placeholder } from "@/pages/Placeholder";
-
-interface ConsoleScreen {
-  path: string;
-  breadcrumb: string[];
-  title: string;
-  subtitle?: string;
-  milestone: string;
-  actionLabel?: string;
-}
-
-const screens: ConsoleScreen[] = [
-  {
-    path: "/dashboard",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Dashboard"],
-    title: "Platform Dashboard",
-    subtitle: "Good morning, Riya · here's how the platform is performing today",
-    milestone: "AM1",
-  },
-  {
-    path: "/approvals",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Approvals"],
-    title: "Tenant Approval Queue",
-    subtitle: "Review and decide on new organization requests",
-    milestone: "AM2",
-  },
-  {
-    path: "/approvals/:requestId",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Approvals", "Request"],
-    title: "Approval Request Review",
-    subtitle: "Reviewing new tenant application",
-    milestone: "AM2",
-    actionLabel: "✓ Approve & Provision",
-  },
-  {
-    path: "/approvals/:requestId/provision",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Approvals", "Provision"],
-    title: "Approve & Provision",
-    subtitle: "Confirm plan and limits, then generate the tenant record",
-    milestone: "AM2",
-  },
-  {
-    path: "/tenants",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Tenants"],
-    title: "Tenants",
-    subtitle: "Every organization running on WarehouseOS",
-    milestone: "AM3",
-    actionLabel: "+ Provision Tenant",
-  },
-  {
-    path: "/tenants/:tenantId",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Tenants"],
-    title: "Tenant Details",
-    subtitle: "Tenant plan, usage, invoices and controls",
-    milestone: "AM3",
-  },
-  {
-    path: "/billing",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Billing & Plans"],
-    title: "Billing & Plans",
-    subtitle: "Subscription tiers and platform-wide revenue",
-    milestone: "AM4",
-    actionLabel: "+ New Plan",
-  },
-  {
-    path: "/feature-flags",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Feature Flags"],
-    title: "Feature Flags",
-    subtitle: "Control which features are available, by plan or by tenant",
-    milestone: "AM4",
-    actionLabel: "+ New Flag",
-  },
-  {
-    path: "/users",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Platform Users"],
-    title: "Platform Users",
-    subtitle: "Staff with access to the Platform Console itself",
-    milestone: "AM5",
-    actionLabel: "+ Add Staff",
-  },
-  {
-    path: "/audit-log",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Audit Log"],
-    title: "Audit Log",
-    subtitle: "Every platform-level action, across every tenant, fully traceable",
-    milestone: "AM5",
-  },
-  {
-    path: "/settings",
-    breadcrumb: ["WarehouseOS", "Platform Console", "Settings"],
-    title: "Console Settings",
-    subtitle: "Platform staff profile, security and session policy",
-    milestone: "AM5",
-  },
-];
+import { PlatformDashboardPage } from "@/pages/dashboard/PlatformDashboardPage";
+import { ApprovalQueuePage } from "@/pages/approvals/ApprovalQueuePage";
+import { RequestReviewPage } from "@/pages/approvals/RequestReviewPage";
+import { ProvisionPage } from "@/pages/approvals/ProvisionPage";
+import { TenantsListPage } from "@/pages/tenants/TenantsListPage";
+import { TenantDetailsPage } from "@/pages/tenants/TenantDetailsPage";
+import { BillingPlansPage } from "@/pages/billing/BillingPlansPage";
+import { FeatureFlagsPage } from "@/pages/flags/FeatureFlagsPage";
+import { PlatformUsersPage } from "@/pages/users/PlatformUsersPage";
+import { AuditLogPage } from "@/pages/audit/AuditLogPage";
+import { ConsoleSettingsPage } from "@/pages/settings/ConsoleSettingsPage";
+import { Page } from "@/components/layout/shell";
+import { EmptyState } from "@/components/ui";
 
 export function AppRoutes() {
   return (
@@ -109,22 +27,25 @@ export function AppRoutes() {
           </RequireAdminAuth>
         }
       >
-        {screens.map((screen) => (
-          <Route
-            key={screen.path}
-            path={screen.path}
-            element={
-              <Placeholder
-                breadcrumb={screen.breadcrumb}
-                title={screen.title}
-                subtitle={screen.subtitle}
-                milestone={screen.milestone}
-                actionLabel={screen.actionLabel}
-              />
-            }
-          />
-        ))}
-        <Route path="*" element={<Placeholder breadcrumb={["WarehouseOS", "Platform Console"]} title="Page not found" milestone="—" />} />
+        <Route path="/dashboard" element={<PlatformDashboardPage />} />
+        <Route path="/approvals" element={<ApprovalQueuePage />} />
+        <Route path="/approvals/:requestId" element={<RequestReviewPage />} />
+        <Route path="/approvals/:requestId/provision" element={<ProvisionPage />} />
+        <Route path="/tenants" element={<TenantsListPage />} />
+        <Route path="/tenants/:tenantId" element={<TenantDetailsPage />} />
+        <Route path="/billing" element={<BillingPlansPage />} />
+        <Route path="/feature-flags" element={<FeatureFlagsPage />} />
+        <Route path="/users" element={<PlatformUsersPage />} />
+        <Route path="/audit-log" element={<AuditLogPage />} />
+        <Route path="/settings" element={<ConsoleSettingsPage />} />
+        <Route
+          path="*"
+          element={
+            <Page>
+              <EmptyState title="Page not found" description="Use the console navigation on the left." />
+            </Page>
+          }
+        />
       </Route>
     </Routes>
   );
