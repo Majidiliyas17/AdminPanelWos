@@ -2,7 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Warehouse } from "lucide-react";
 import { useAdminAuth } from "@/lib/auth";
-import { PLATFORM_ACCOUNT } from "@/mocks/platform";
+import { PLATFORM_ACCOUNT } from "@/lib/consoleConfig";
+import { describeApiError } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 export function AdminLoginPage() {
   const { user, login } = useAdminAuth();
@@ -22,8 +24,11 @@ export function AdminLoginPage() {
     try {
       await login(email, password, totpCode || undefined);
       navigate("/dashboard", { replace: true });
-    } catch {
-      setError("Sign-in failed. Use the seeded platform account and a valid 2FA code.");
+    } catch (err) {
+      // Asli API error dikhao — chup-chaap mock login nahi hota
+      const message = describeApiError(err);
+      setError(message);
+      toast.error("Sign-in failed", message, "login");
     } finally {
       setBusy(false);
     }

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Check, Clock, FileText, Home, ShieldCheck, StickyNote } from "lucide-react";
+import { Clock, FileText, Globe, ShieldCheck, StickyNote } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
 import { Button, DeltaPill, ErrorState, Modal, PanelCard, Skeleton, StatCard } from "@/components/ui";
 import { platformApi } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
+import { describeApiError } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import { formatDateTime, hoursSince } from "@/lib/time";
 
 export function RequestReviewPage() {
@@ -15,7 +17,6 @@ export function RequestReviewPage() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -37,25 +38,21 @@ export function RequestReviewPage() {
   if (error || !request) {
     return (
       <Page>
-        <ErrorState onRetry={reload} />
+        <ErrorState onRetry={reload} title="Couldn't load this request" description={describeApiError(error)} />
       </Page>
     );
   }
 
   const queueHours = hoursSince(request.submittedAtUtc);
-  const checks = request.checks ?? 4;
-  const estWarehouses = request.estimatedWarehouses ?? 4;
-  const estMrr = request.estimatedMrr ?? "Pricing on request";
-  const region = request.region ?? `${request.country} region`;
 
   async function onApprove() {
     setBusy(true);
-    setActionError(null);
     try {
       await platformApi.approveRequest(request!.id);
+      toast.success("Request approved", `${request!.companyName} is being provisioned.`);
       navigate(`/approvals/${request!.id}/provision`);
     } catch {
-      setActionError("Could not approve this request. Make sure it is still Pending.");
+      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -63,13 +60,13 @@ export function RequestReviewPage() {
 
   async function onReject() {
     setBusy(true);
-    setActionError(null);
     try {
       await platformApi.rejectRequest(request!.id, rejectNote || undefined);
+      toast.success("Request rejected", `${request!.companyName} has been rejected.`);
       setRejectOpen(false);
       navigate("/approvals");
     } catch {
-      setActionError("Could not reject this request.");
+      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -80,10 +77,10 @@ export function RequestReviewPage() {
     ["Country", request.country],
     ["Warehouse Type", request.warehouseType],
     ["Requested Plan", request.requestedPlan],
-    ["Estimated Warehouses", String(estWarehouses)],
     ["Contact", request.contactName],
     ["Email", request.email],
     ["Submitted", formatDateTime(request.submittedAtUtc)],
+    ["Status", request.status],
   ];
 
   return (
@@ -104,19 +101,12 @@ export function RequestReviewPage() {
         }
       />
 
-      {actionError && <p className="mb-3 rounded-lg bg-danger-tint px-3 py-2 text-[11px] text-danger">{actionError}</p>}
-
       <div className="grid grid-cols-4 gap-4">
         <StatCard
-          label="Verification Checks"
-          value={
-            <>
-              {checks}
-              <span className="ml-1 text-[11px] font-medium text-ink-500">of {checks}</span>
-            </>
-          }
-          icon={<Check className="size-4" />}
-          delta={<DeltaPill direction="up">all passed</DeltaPill>}
+          label="Current Status"
+          value={request.status}
+          icon={<ShieldCheck className="size-4" />}
+          delta={<DeltaPill direction="up">{request.status === "Pending" ? "awaiting decision" : "reviewed"}</DeltaPill>}
         />
         <StatCard
           label="Time in Queue"
@@ -133,18 +123,13 @@ export function RequestReviewPage() {
           label="Requested Plan"
           value={request.requestedPlan}
           icon={<FileText className="size-4" />}
-          delta={<DeltaPill direction="up">{estMrr}</DeltaPill>}
+          delta={<DeltaPill direction="up">as requested</DeltaPill>}
         />
         <StatCard
-          label="Est. Footprint"
-          value={
-            <>
-              {estWarehouses}
-              <span className="ml-1 text-[11px] font-medium text-ink-500">warehouses</span>
-            </>
-          }
-          icon={<Home className="size-4" />}
-          delta={<DeltaPill direction="up">{region}</DeltaPill>}
+          label="Country"
+          value={request.country}
+          icon={<Globe className="size-4" />}
+          delta={<DeltaPill direction="up">{request.warehouseType}</DeltaPill>}
         />
       </div>
 
@@ -161,15 +146,11 @@ export function RequestReviewPage() {
         </PanelCard>
 
         <div className="space-y-4">
-          <PanelCard title="Automated Verification" icon={<ShieldCheck className="size-3.5" />}>
-            <ul className="space-y-2.5">
-              {platformApi.automatedChecks.map((check) => (
-                <li key={check} className="flex items-center gap-2 text-[12px] font-medium text-ink-900">
-                  <Check className="size-4 shrink-0 text-success" />
-                  {check}
-                </li>
-              ))}
-            </ul>
+          <PanelCard title="Verification" icon={<ShieldCheck className="size-3.5" />}>
+            <p className="text-[12px] leading-relaxed text-ink-500">
+              Backend verification results abhi is request ke saath nahi aa rahe. Admin console yahan status "not run"
+              dikhata hai — green tick tabhi aayenge jab backend verification endpoint is data ko bhejega.
+            </p>
           </PanelCard>
 
           <PanelCard title="Internal Notes" icon={<StickyNote className="size-3.5" />}>

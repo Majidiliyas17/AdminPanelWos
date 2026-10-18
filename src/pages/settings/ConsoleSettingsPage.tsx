@@ -3,27 +3,32 @@ import { KeyRound, Lock, Save, ShieldCheck, User } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
 import { Button, Field, PanelCard, StatusChip, inputClass } from "@/components/ui";
 import { useAdminAuth } from "@/lib/auth";
+import { toast } from "@/lib/toast";
 
 export function ConsoleSettingsPage() {
   const { user } = useAdminAuth();
-  const [name, setName] = useState(user?.name || "Riya Kapoor");
-  const [email, setEmail] = useState(user?.email || "platform@warehouseos.local");
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [sessionMinutes, setSessionMinutes] = useState("60");
-  const [savedProfile, setSavedProfile] = useState(false);
-  const [savedSecurity, setSavedSecurity] = useState(false);
 
+  // Backend me platform staff ka profile/password update endpoint abhi
+  // nahi hai — isliye fake "Saved" nahi dikhate, seedha bolte hain.
   function saveProfile() {
-    setSavedProfile(true);
-    setTimeout(() => setSavedProfile(false), 2000);
+    toast.warning(
+      "Profile update API not available",
+      "Backend me /platform/me PUT endpoint abhi exist nahi karta. Change save nahi hoga.",
+      "settings-profile",
+    );
   }
 
   function saveSecurity() {
-    setCurrentPassword("");
-    setNewPassword("");
-    setSavedSecurity(true);
-    setTimeout(() => setSavedSecurity(false), 2000);
+    toast.warning(
+      "Password change API not available",
+      "Backend me platform staff password-change endpoint abhi exist nahi karta.",
+      "settings-security",
+    );
   }
 
   return (
@@ -53,7 +58,6 @@ export function ConsoleSettingsPage() {
               <Save className="size-3.5" />
               Save Profile
             </Button>
-            {savedProfile && <span className="text-[11px] font-semibold text-success">Saved</span>}
           </div>
         </PanelCard>
 
@@ -84,7 +88,6 @@ export function ConsoleSettingsPage() {
                 <KeyRound className="size-3.5" />
                 Update Password
               </Button>
-              {savedSecurity && <span className="text-[11px] font-semibold text-success">Updated</span>}
             </div>
           </PanelCard>
 

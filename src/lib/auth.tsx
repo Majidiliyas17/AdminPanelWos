@@ -1,12 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import {
-  adminAuthStore,
-  isNetworkError,
-  platformAuthApi,
-  type PlatformSession,
-} from "@/lib/api";
-import { PLATFORM_ACCOUNT } from "@/mocks/platform";
+import { adminAuthStore, platformAuthApi, type PlatformSession } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 interface AdminAuthState {
   user: PlatformSession | null;
@@ -20,39 +15,18 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<PlatformSession | null>(() => adminAuthStore.user);
 
   async function login(email: string, password: string, mfaCode?: string, recoveryCode?: string) {
-    try {
-      const session = await platformAuthApi.login(email, password, mfaCode, recoveryCode);
-      const mapped: PlatformSession = {
-        id: session.id,
-        name: session.name,
-        email: session.email,
-        role: session.role,
-        token: session.token,
-      };
-      adminAuthStore.setSession(mapped, false);
-      setUser(mapped);
-      return;
-    } catch (error) {
-      const offline = isNetworkError(error) || (error as { response?: { status?: number } })?.response?.status === 404;
-      const badCredentials =
-        (error as { response?: { status?: number } })?.response?.status === 401;
-      const seedMatch =
-        email.trim().toLowerCase() === PLATFORM_ACCOUNT.email.toLowerCase() &&
-        password === PLATFORM_ACCOUNT.password;
-      if (seedMatch && (offline || badCredentials) && (mfaCode || recoveryCode || offline)) {
-        const mockSession: PlatformSession = {
-          id: PLATFORM_ACCOUNT.id,
-          name: "Riya Kapoor",
-          email: PLATFORM_ACCOUNT.email,
-          role: "SuperAdmin",
-          token: "mock-platform-token",
-        };
-        adminAuthStore.setSession(mockSession, true);
-        setUser(mockSession);
-        return;
-      }
-      throw error;
-    }
+    // Mock login hataya — jo bhi error aaye, user ko toast me dikhega.
+    const session = await platformAuthApi.login(email, password, mfaCode, recoveryCode);
+    const mapped: PlatformSession = {
+      id: session.id,
+      name: session.name,
+      email: session.email,
+      role: session.role,
+      token: session.token,
+    };
+    adminAuthStore.setSession(mapped);
+    setUser(mapped);
+    toast.success("Signed in", `Welcome back, ${mapped.name}.`);
   }
 
   function logout() {

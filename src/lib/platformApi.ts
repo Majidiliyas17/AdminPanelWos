@@ -1,491 +1,281 @@
-import { adminApi, adminAuthStore, isNetworkError } from "@/lib/api";
+// ====================================================================
+// platformApi.ts — Platform Console ka API layer (SIRF real API)
+// ====================================================================
+// Simple language mein: yahan koi mock/fallback nahi hai. Jo bhi request
+// fail hoti hai (backend band, 401, 404, 5xx), `toast.api()` se user ko
+// screen par dikh jaata hai ki kis module ki call fail hui aur kyun.
+// Phir page apna ErrorState/Retry bhi dikha sakta hai.
+// ====================================================================
+
+import { adminApi } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import type {
   ApprovalRequest,
   AuditEvent,
+  CreatedPlatformStaff,
   FeatureFlagRow,
-  ImpersonationSession,
+  PlatformDashboard,
   PlatformPlan,
   PlatformStaff,
   ProvisionedTenant,
   TenantRow,
+  TopTenantRow,
 } from "@/lib/platformTypes";
-import {
-  approvalKpis,
-  automatedChecks,
-  auditKpis,
-  billingInvoiceRows,
-  billingKpis,
-  createMockProvisionedTenant,
-  dashboardKpis,
-  flagKpis,
-  mockAudit,
-  mockFlags,
-  mockOverrides,
-  mockPlans,
-  mockRequests,
-  mockStaff,
-  mockTenants,
-  pushMockAudit,
-  tenantKpis,
-  topTenantsByMrr,
-  upsertMockFlag,
-  upsertMockPlan,
-  upsertMockStaff,
-  updateMockTenantStatus,
-  userKpis,
-} from "@/mocks/platform";
 
 export interface Paged<T> {
   items: T[];
-  source: "api" | "mock";
 }
 
-async function withFallback<T>(
-  load: () => Promise<T[]>,
-  fallback: () => T[],
-): Promise<Paged<T>> {
-  if (adminAuthStore.mockMode) return { items: fallback(), source: "mock" };
+// ---- low-level: har call par scope naam se toast ----
+
+async function get<T>(scope: string, url: string, params?: Record<string, unknown>): Promise<T> {
   try {
-    const data = await load();
-    return { items: data, source: "api" };
+    const res = await adminApi.get<T>(url, { params });
+    return res.data;
   } catch (error) {
-    if (isNetworkError(error)) return { items: fallback(), source: "mock" };
-    const status = (error as { response?: { status?: number } })?.response?.status;
-    if (status === 404 || status === 501) return { items: fallback(), source: "mock" };
-    throw error;
+    throw toast.api(scope, error);
   }
 }
 
+async function post<T>(scope: string, url: string, body?: unknown): Promise<T> {
+  try {
+    const res = await adminApi.post<T>(url, body);
+    return res.data;
+  } catch (error) {
+    throw toast.api(scope, error);
+  }
+}
+
+async function put<T>(scope: string, url: string, body?: unknown): Promise<T> {
+  try {
+    const res = await adminApi.put<T>(url, body);
+    return res.data;
+  } catch (error) {
+    throw toast.api(scope, error);
+  }
+}
+
+// Backend kabhi array bhejta hai, kabhi single object — dono handle karo
+function asArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  const paged = value as { items?: unknown[] } | null;
+  if (paged && Array.isArray(paged.items)) return paged.items as T[];
+  return [];
+}
+
+const money = (value: number) =>
+  value >= 1000 ? `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}K` : `$${Math.round(value)}`;
+
+// ---- KPI helpers (real data se compute — kuch bhi hardcoded nahi) ----
+
+export function computeApprovalKpis(requests: ApprovalRequest[]) {
+  const pending = requests.filter((r) => r.status === "Pending").length;
+  const inReview = requests.filter((r) => r.status === "In Review").length;
+  const approved = requests.filter((r) => r.status === "Approved").length;
+  const rejected = requests.filter((r) => r.status === "Rejected").length;
+  return { pending, inReview, approved, rejected };
+}
+
+export function computeTenantKpis(tenants: TenantRow[]) {
+  const total = tenants.length;
+  const active = tenants.filter((t) => t.status === "Active").length;
+  const trial = tenants.filter((t) => t.status === "Trial").length;
+  const suspended = tenants.filter((t) => t.status === "Suspended").length;
+  return { total, active, trial, suspended };
+}
+
+export function computeUserKpis(staff: PlatformStaff[]) {
+  const active = staff.filter((s) => s.isActive).length;
+  const superAdmins = staff.filter((s) => s.role === "SuperAdmin").length;
+  return { total: staff.length, active, inactive: staff.length - active, superAdmins };
+}
+
+export function computeFlagKpis(flags: FeatureFlagRow[]) {
+  const active = flags.filter((f) => f.isActive).length;
+  return { total: flags.length, active, disabled: flags.length - active };
+}
+
+export function computeAuditKpis(events: AuditEvent[]) {
+  const now = Date.now();
+  const last24h = events.filter((e) => now - new Date(e.timestampUtc).getTime() < 86400000).length;
+  const uniqueActions = new Set(events.map((e) => e.action)).size;
+  return { total: events.length, last24h, uniqueActions };
+}
+
+export function computeBillingKpis(plans: PlatformPlan[], tenants: TenantRow[]) {
+  const priceById = new Map(plans.map((p) => [p.id, p.monthlyPrice]));
+  const paying = tenants.filter((t) => t.status !== "Suspended" && t.planId && priceById.has(t.planId));
+  const mrr = paying.reduce((sum, t) => sum + (priceById.get(t.planId as string) ?? 0), 0);
+  return {
+    mrr,
+    payingTenants: paying.length,
+    avgRevenue: paying.length ? mrr / paying.length : 0,
+  };
+}
+
+// ---- API surface ----
+
+async function fetchPlansMap(scope: string): Promise<Map<string, PlatformPlan>> {
+  const plans = asArray<PlatformPlan>(await get<PlatformPlan[]>(scope, "/platform/plans"));
+  return new Map(plans.map((p) => [p.id, p]));
+}
+
 export const platformApi = {
-  async dashboard() {
-    if (adminAuthStore.mockMode) {
-      return {
-        kpis: dashboardKpis,
-        pendingRequests: mockRequests.filter((r) => r.status === "Pending").slice(0, 3),
-        topTenants: topTenantsByMrr,
-        source: "mock" as const,
-      };
-    }
-    try {
-      const [requestsRes, tenantsRes] = await Promise.all([
-        adminApi.get<ApprovalRequest[]>("/platform/tenant-requests"),
-        adminApi.get<TenantRow[]>("/platform/tenants"),
-      ]);
-      const requests = requestsRes.data;
-      const tenants = tenantsRes.data;
-      const active = tenants.filter((t) => t.status === "Active").length;
-      const pending = requests.filter((r) => r.status === "Pending").length;
-      const mrrSum = tenants
-        .filter((t) => t.status !== "Suspended")
-        .reduce((sum, t) => sum + (t.mrr || 0), 0);
-      return {
-        kpis: {
-          ...dashboardKpis,
-          totalTenants: tenants.length || dashboardKpis.totalTenants,
-          activeTenants: active || dashboardKpis.activeTenants,
-          pendingApprovals: pending || dashboardKpis.pendingApprovals,
-          mrr: mrrSum ? `$${Math.round(mrrSum / 1000)}K` : dashboardKpis.mrr,
-        },
-        pendingRequests: requests.filter((r) => r.status === "Pending").slice(0, 3),
-        topTenants: topTenantsByMrr,
-        source: "api" as const,
-      };
-    } catch (error) {
-      if (isNetworkError(error)) {
+  // Dashboard ka koi alag endpoint nahi hai — teen list se mila kar
+  // real numbers banate hain.
+  async dashboard(): Promise<PlatformDashboard> {
+    const [requestsRaw, tenantsRaw, priceById] = await Promise.all([
+      get<ApprovalRequest[]>("Tenant requests", "/platform/tenant-requests"),
+      get<TenantRow[]>("Tenants", "/platform/tenants"),
+      fetchPlansMap("Plans"),
+    ]);
+
+    const requests = asArray<ApprovalRequest>(requestsRaw);
+    const tenants = asArray<TenantRow>(tenantsRaw).map((t) => ({
+      ...t,
+      plan: t.planId ? (priceById.get(t.planId)?.name ?? "—") : "—",
+    }));
+
+    const countries = new Set(tenants.map((t) => t.country).filter(Boolean)).size;
+    const active = tenants.filter((t) => t.status === "Active").length;
+    const pending = requests.filter((r) => r.status === "Pending").length;
+    const billing = computeBillingKpis([...priceById.values()], tenants);
+
+    const topTenants: TopTenantRow[] = tenants
+      .map((t) => {
+        const plan = t.planId ? priceById.get(t.planId) : undefined;
         return {
-          kpis: dashboardKpis,
-          pendingRequests: mockRequests.filter((r) => r.status === "Pending").slice(0, 3),
-          topTenants: topTenantsByMrr,
-          source: "mock" as const,
+          tenant: t.name,
+          plan: t.plan,
+          footprint: t.country || "—",
+          mrr: plan ? money(plan.monthlyPrice) : "—",
+          status: t.status,
         };
-      }
-      throw error;
-    }
-  },
+      })
+      .slice(0, 5);
 
-  approvalKpis,
-
-  async listRequests(status?: string): Promise<Paged<ApprovalRequest>> {
-    const normalized = !status || status === "All" ? undefined : status;
-    return withFallback(
-      async () => {
-        const res = await adminApi.get<ApprovalRequest[]>("/platform/tenant-requests", {
-          params: normalized ? { status: normalized } : undefined,
-        });
-        return res.data;
-      },
-      () => {
-        const rows = normalized ? mockRequests.filter((r) => r.status === normalized) : mockRequests;
-        return rows;
-      },
-    );
-  },
-
-  async getRequest(id: string): Promise<ApprovalRequest> {
-    if (adminAuthStore.mockMode) {
-      const found = mockRequests.find((r) => r.id === id);
-      if (!found) throw new Error("Request not found");
-      return found;
-    }
-    try {
-      const res = await adminApi.get<ApprovalRequest>(`/platform/tenant-requests/${id}`);
-      return res.data;
-    } catch (error) {
-      if (isNetworkError(error) || (error as { response?: { status?: number } })?.response?.status === 404) {
-        const found = mockRequests.find((r) => r.id === id);
-        if (found) return found;
-      }
-      throw error;
-    }
-  },
-
-  automatedChecks,
-
-  async approveRequest(id: string): Promise<ProvisionedTenant> {
-    if (adminAuthStore.mockMode) {
-      const request = mockRequests.find((r) => r.id === id);
-      if (!request) throw new Error("Request not found");
-      const provisioned = createMockProvisionedTenant(request, request.requestedPlan, "USD", 0, 25);
-      request.status = "Approved";
-      pushMockAudit({
-        title: "Tenant Approved",
-        detail: `${request.companyName} → ${provisioned.tenantCode} · by Riya Kapoor`,
-        action: "TenantRequestApproved",
-      });
-      return provisioned;
-    }
-    const res = await adminApi.post<ProvisionedTenant>(`/platform/tenant-requests/${id}/approve`);
-    return res.data;
-  },
-
-  async rejectRequest(id: string, note?: string) {
-    if (adminAuthStore.mockMode) {
-      const request = mockRequests.find((r) => r.id === id);
-      if (request) {
-        request.status = "Rejected";
-        pushMockAudit({
-          title: "Tenant Rejected",
-          detail: `${request.companyName}${note ? ` — ${note}` : ""} · by Riya Kapoor`,
-          action: "TenantRequestRejected",
-        });
-      }
-      return;
-    }
-    await adminApi.post(`/platform/tenant-requests/${id}/reject`, { note: note || null });
-  },
-
-  tenantKpis,
-
-  async listTenants(): Promise<Paged<TenantRow>> {
-    return withFallback(
-      async () => {
-        const res = await adminApi.get<TenantRow[]>("/platform/tenants");
-        return res.data;
-      },
-      () => mockTenants,
-    );
-  },
-
-  async getTenant(id: string): Promise<TenantRow> {
-    if (adminAuthStore.mockMode) {
-      const found = mockTenants.find((t) => t.id === id || t.code === id);
-      if (!found) throw new Error("Tenant not found");
-      return found;
-    }
-    try {
-      const res = await adminApi.get<TenantRow>(`/platform/tenants/${id}`);
-      const data = res.data;
-      const mock = mockTenants.find((t) => t.id === data.id || t.code === data.code);
-      return {
-        ...data,
-        mrr: data.mrr ?? mock?.mrr ?? 0,
-        healthScore: data.healthScore ?? mock?.healthScore ?? 0,
-        activeUsers: data.activeUsers ?? mock?.activeUsers ?? 0,
-        userSeats: data.userSeats ?? mock?.userSeats ?? 0,
-        regionCount: data.regionCount ?? mock?.regionCount ?? 0,
-        memberSince: data.memberSince ?? mock?.memberSince ?? data.since,
-        platformInvoices: data.platformInvoices?.length ? data.platformInvoices : mock?.platformInvoices ?? [],
-        usage: data.usage?.length ? data.usage : mock?.usage ?? [],
-      };
-    } catch (error) {
-      if (isNetworkError(error) || (error as { response?: { status?: number } })?.response?.status === 404) {
-        const found = mockTenants.find((t) => t.id === id || t.code === id);
-        if (found) return found;
-      }
-      throw error;
-    }
-  },
-
-  async suspendTenant(id: string) {
-    if (adminAuthStore.mockMode) {
-      updateMockTenantStatus(id, "Suspended");
-      const tenant = mockTenants.find((t) => t.id === id);
-      pushMockAudit({
-        title: "Tenant Suspended",
-        detail: `${tenant?.name ?? id} · by Riya Kapoor`,
-        action: "TenantSuspended",
-      });
-      return;
-    }
-    await adminApi.post(`/platform/tenants/${id}/suspend`);
-  },
-
-  async reactivateTenant(id: string) {
-    if (adminAuthStore.mockMode) {
-      updateMockTenantStatus(id, "Active");
-      const tenant = mockTenants.find((t) => t.id === id);
-      pushMockAudit({
-        title: "Tenant Reactivated",
-        detail: `${tenant?.name ?? id} · by Riya Kapoor`,
-        action: "TenantReactivated",
-      });
-      return;
-    }
-    await adminApi.post(`/platform/tenants/${id}/reactivate`);
-  },
-
-  async impersonateTenant(id: string, referenceTicket: string): Promise<ImpersonationSession> {
-    if (adminAuthStore.mockMode) {
-      const tenant = mockTenants.find((t) => t.id === id);
-      pushMockAudit({
-        title: "Impersonated Tenant",
-        detail: `${tenant?.name ?? id} — ${referenceTicket} · by Riya Kapoor`,
-        action: "TenantImpersonated",
-      });
-      return {
-        userId: "mock-user",
-        email: `owner@${tenant?.code ?? "tenant"}.example`,
-        tenantId: id,
-        token: "mock-impersonation-token",
-        referenceTicket,
-      };
-    }
-    const res = await adminApi.post<ImpersonationSession>(`/platform/tenants/${id}/impersonate`, {
-      referenceTicket,
-    });
-    return res.data;
-  },
-
-  billingKpis,
-
-  async listPlans(): Promise<Paged<PlatformPlan>> {
-    return withFallback(
-      async () => {
-        const res = await adminApi.get<
-          { id: string; name: string; monthlyPrice: number; maxWarehouses: number; maxUserSeats: number; isActive: boolean }[]
-        >("/platform/plans");
-        return res.data.map((p) => ({
-          id: p.id,
-          name: p.name,
-          monthlyPrice: p.monthlyPrice,
-          maxWarehouses: p.maxWarehouses,
-          maxUserSeats: p.maxUserSeats,
-          warehousesLabel:
-            p.maxWarehouses >= 9999 ? "Unlimited warehouses" : `Up to ${p.maxWarehouses} warehouse${p.maxWarehouses === 1 ? "" : "s"}`,
-          seatsLabel: p.maxUserSeats >= 99999 ? "Unlimited seats" : `${p.maxUserSeats} user seats`,
-          priceLabel: p.monthlyPrice >= 9999 ? "Custom" : `$${p.monthlyPrice.toLocaleString("en-US")}`,
-          highlighted: p.name.toLowerCase() === "growth",
-          active: p.isActive,
-        }));
-      },
-      () => mockPlans,
-    );
-  },
-
-  async createPlan(input: { name: string; monthlyPrice: number; maxWarehouses: number; maxUserSeats: number }) {
-    if (adminAuthStore.mockMode) {
-      const plan: PlatformPlan = {
-        id: `plan-${Date.now()}`,
-        name: input.name,
-        monthlyPrice: input.monthlyPrice,
-        maxWarehouses: input.maxWarehouses,
-        maxUserSeats: input.maxUserSeats,
-        warehousesLabel: `Up to ${input.maxWarehouses} warehouses`,
-        seatsLabel: `${input.maxUserSeats} user seats`,
-        priceLabel: `$${input.monthlyPrice.toLocaleString("en-US")}`,
-        highlighted: false,
-        active: true,
-      };
-      upsertMockPlan(plan);
-      pushMockAudit({ title: "Plan Created", detail: `${input.name} · by Riya Kapoor`, action: "PlanCreated" });
-      return plan;
-    }
-    const res = await adminApi.post<{ id: string }>("/platform/plans", input);
-    return { id: res.data.id, ...input } as PlatformPlan;
-  },
-
-  async billingInvoices(): Promise<Paged<(typeof billingInvoiceRows)[number]>> {
-    return withFallback(async () => billingInvoiceRows, () => billingInvoiceRows);
-  },
-
-  flagKpis,
-
-  async listFlags(): Promise<Paged<FeatureFlagRow>> {
-    return withFallback(
-      async () => {
-        const res = await adminApi.get<
-          { id: string; key: string; name: string; description: string; isActive: boolean }[]
-        >("/platform/feature-flags");
-        return res.data.map((f) => {
-          const mock = mockFlags.find((m) => m.key === f.key || m.id === f.id);
-          return {
-            id: f.id,
-            key: f.key,
-            name: f.name,
-            description: f.description,
-            starter: mock?.starter ?? false,
-            growth: mock?.growth ?? f.isActive,
-            enterprise: mock?.enterprise ?? f.isActive,
-            active: f.isActive,
-          };
-        });
-      },
-      () => mockFlags,
-    );
-  },
-
-  async createFlag(input: { key: string; name: string; description: string }) {
-    if (adminAuthStore.mockMode) {
-      const flag: FeatureFlagRow = {
-        id: `flag-${Date.now()}`,
-        key: input.key,
-        name: input.name,
-        description: input.description,
-        starter: false,
-        growth: false,
-        enterprise: true,
-        active: true,
-      };
-      upsertMockFlag(flag);
-      pushMockAudit({ title: "Feature Flag Created", detail: `${input.name} · by Riya Kapoor`, action: "FeatureFlagCreated" });
-      return flag;
-    }
-    const res = await adminApi.post<{ id: string }>("/platform/feature-flags", input);
     return {
-      id: res.data.id,
-      key: input.key,
-      name: input.name,
-      description: input.description,
-      starter: false,
-      growth: false,
-      enterprise: true,
-      active: true,
-    } satisfies FeatureFlagRow;
-  },
-
-  async toggleFlag(flag: FeatureFlagRow, plan: "starter" | "growth" | "enterprise", enabled: boolean) {
-    if (adminAuthStore.mockMode) {
-      const found = mockFlags.find((f) => f.id === flag.id);
-      if (found) found[plan] = enabled;
-      pushMockAudit({
-        title: "Feature Flag Changed",
-        detail: `${flag.name} ${plan} → ${enabled ? "on" : "off"} · by Riya Kapoor`,
-        action: "FeatureFlagUpdated",
-      });
-      return;
-    }
-    const isActive = plan === "enterprise" ? enabled || flag.growth || flag.starter : flag.enterprise || flag.growth || flag.starter;
-    await adminApi.put(`/platform/feature-flags/${flag.id}`, {
-      name: flag.name,
-      description: flag.description,
-      isActive,
-    });
-  },
-
-  overrides: mockOverrides,
-
-  userKpis,
-
-  async listStaff(): Promise<Paged<PlatformStaff>> {
-    return withFallback(
-      async () => {
-        const res = await adminApi.get<{ id: string; name: string; email: string; role: string; isActive: boolean }[]>(
-          "/platform/users",
-        );
-        return res.data.map((u) => ({
-          id: u.id,
-          name: u.name,
-          role: u.role,
-          email: u.email,
-          status: u.isActive ? "Active" : "Inactive",
-          lastLogin: "—",
-        }));
+      kpis: {
+        totalTenants: tenants.length,
+        totalTenantsDelta: countries ? `across ${countries} countries` : "no tenants yet",
+        activeTenants: active,
+        activeTenantsDelta: tenants.length ? `${Math.round((active / tenants.length) * 100)}% of total` : "—",
+        pendingApprovals: pending,
+        pendingApprovalsDelta: pending ? "awaiting review" : "queue clear",
+        mrr: money(billing.mrr),
+        mrrDelta: `${billing.payingTenants} paying tenants`,
       },
-      () => mockStaff,
-    );
-  },
-
-  async createStaff(input: { name: string; email: string; password: string; role: string }) {
-    if (adminAuthStore.mockMode) {
-      const staff: PlatformStaff = {
-        id: `staff-${Date.now()}`,
-        name: input.name,
-        role: input.role,
-        email: input.email,
-        status: "Active",
-        lastLogin: "—",
-      };
-      upsertMockStaff(staff);
-      pushMockAudit({ title: "Platform User Created", detail: `${input.email} (${input.role}) · by Riya Kapoor`, action: "PlatformUserCreated" });
-      return { staff, mfaSecret: "MOCKSECRET", recoveryCodes: ["11111-22222", "33333-44444"] };
-    }
-    const res = await adminApi.post<{ id: string; email: string; role: string; mfaSecret: string; recoveryCodes: string[] }>(
-      "/platform/users",
-      input,
-    );
-    return {
-      staff: {
-        id: res.data.id,
-        name: input.name,
-        email: res.data.email,
-        role: res.data.role,
-        status: "Active",
-        lastLogin: "—",
-      } satisfies PlatformStaff,
-      mfaSecret: res.data.mfaSecret,
-      recoveryCodes: res.data.recoveryCodes,
+      pendingRequests: requests.filter((r) => r.status === "Pending").slice(0, 3),
+      topTenants,
     };
   },
 
-  auditKpis,
+  // ---- Approvals ----
+  listRequests: async (status?: string): Promise<Paged<ApprovalRequest>> => {
+    const scope = "Tenant requests";
+    const raw = await get<ApprovalRequest[]>(scope, "/platform/tenant-requests", status ? { status } : undefined);
+    return { items: asArray<ApprovalRequest>(raw) };
+  },
+  getRequest: (id: string) => get<ApprovalRequest>("Tenant request", `/platform/tenant-requests/${id}`),
+  approveRequest: (id: string) => post<ProvisionedTenant>("Approve request", `/platform/tenant-requests/${id}/approve`),
+  rejectRequest: (id: string, note?: string) =>
+    post<void>("Reject request", `/platform/tenant-requests/${id}/reject`, { note: note ?? "" }),
 
-  async listAudit(): Promise<Paged<AuditEvent>> {
-    return withFallback(
-      async () => {
-        const res = await adminApi.get<{
-          id: string;
-          action: string;
-          detail: string;
-          timestampUtc: string;
-        }[]>("/platform/audit-log");
-        return res.data.map((row) => ({
-          id: row.id,
-          title: titleFromAction(row.action),
-          detail: row.detail,
-          timestampUtc: row.timestampUtc,
-          action: row.action,
-        }));
-      },
-      () => mockAudit,
-    );
+  // ---- Tenants ----
+  listTenants: async (): Promise<Paged<TenantRow>> => {
+    const scope = "Tenants";
+    const [raw, priceById] = await Promise.all([
+      get<TenantRow[]>(scope, "/platform/tenants"),
+      fetchPlansMap("Plans"),
+    ]);
+    const items = asArray<TenantRow>(raw).map((t) => ({
+      ...t,
+      plan: t.planId ? (priceById.get(t.planId)?.name ?? "—") : "—",
+    }));
+    return { items };
+  },
+  getTenant: async (id: string): Promise<TenantRow> => {
+    const [tenant, priceById] = await Promise.all([
+      get<TenantRow>("Tenant", `/platform/tenants/${id}`),
+      fetchPlansMap("Plans"),
+    ]);
+    return { ...tenant, plan: tenant.planId ? (priceById.get(tenant.planId)?.name ?? "—") : "—" };
+  },
+  suspendTenant: (id: string) => post<void>("Suspend tenant", `/platform/tenants/${id}/suspend`),
+  reactivateTenant: (id: string) => post<void>("Reactivate tenant", `/platform/tenants/${id}/reactivate`),
+  impersonateTenant: (id: string, referenceTicket: string) =>
+    post<{ token: string; email: string; tenantId: string; referenceTicket: string }>(
+      "Impersonation",
+      `/platform/tenants/${id}/impersonate`,
+      { referenceTicket },
+    ),
+
+  // ---- Plans ----
+  listPlans: async (): Promise<Paged<PlatformPlan>> => {
+    const raw = await get<PlatformPlan[]>("Plans", "/platform/plans");
+    return { items: asArray<PlatformPlan>(raw) };
+  },
+  // CreatePlanBody: name/monthlyPrice/maxWarehouses/maxUserSeats
+  createPlan: (input: {
+    name: string;
+    monthlyPrice: number;
+    maxWarehouses: number;
+    maxUserSeats: number;
+  }) => post<{ id: string }>("Create plan", "/platform/plans", input),
+
+  // ---- Feature flags ----
+  listFlags: async (): Promise<Paged<FeatureFlagRow>> => {
+    const raw = await get<FeatureFlagRow[]>("Feature flags", "/platform/feature-flags");
+    return { items: asArray<FeatureFlagRow>(raw) };
+  },
+  // CreateFeatureFlagBody: sirf key/name/description (isActive create par nahi jaata)
+  createFlag: (input: { key: string; name: string; description?: string }) =>
+    post<{ id: string }>("Create feature flag", "/platform/feature-flags", {
+      key: input.key,
+      name: input.name,
+      description: input.description ?? "",
+    }),
+  // UpdateFeatureFlagBody: name + description + isActive teeno chahiye
+  toggleFlag: (flag: { id: string; name: string; description: string }, isActive: boolean) =>
+    put<void>("Feature flag", `/platform/feature-flags/${flag.id}`, {
+      name: flag.name,
+      description: flag.description ?? "",
+      isActive,
+    }),
+
+  // ---- Platform users ----
+  listStaff: async (): Promise<Paged<PlatformStaff>> => {
+    const raw = await get<PlatformStaff[]>("Platform users", "/platform/users");
+    return { items: asArray<PlatformStaff>(raw) };
+  },
+  // CreatePlatformUserBody: name/email/password/role — response me MFA
+  // secret + recovery codes ek hi baar aate hain.
+  createStaff: (input: { name: string; email: string; password: string; role: string }) =>
+    post<CreatedPlatformStaff>("Add platform user", "/platform/users", input),
+
+  // ---- Audit ----
+  listAudit: async (): Promise<Paged<AuditEvent>> => {
+    const raw = await get<AuditEvent[]>("Audit log", "/platform/audit-log");
+    const events = asArray<AuditEvent>(raw).map((e) => ({
+      ...e,
+      title: titleFromAction(e.action),
+    }));
+    return { items: events };
   },
 };
 
+// Backend sirf action code bhejta hai ("TenantRequest.Approved") —
+// ye human title UI ke liye banata hai.
 function titleFromAction(action: string): string {
-  const map: Record<string, string> = {
-    TenantRequestApproved: "Tenant Approved",
-    TenantRequestRejected: "Tenant Rejected",
-    TenantProvisioned: "Tenant Provisioned",
-    TenantSuspended: "Tenant Suspended",
-    TenantReactivated: "Tenant Reactivated",
-    TenantImpersonated: "Impersonated Tenant",
-    PlanChanged: "Plan Changed",
-    PlanCreated: "Plan Created",
-    FeatureFlagCreated: "Feature Flag Created",
-    FeatureFlagUpdated: "Feature Flag Changed",
-    TenantFeatureFlagUpdated: "Feature Flag Changed",
-    PlatformUserCreated: "Platform User Created",
-    PlatformMfaReset: "MFA Reset",
-  };
-  return map[action] ?? action;
+  const key = action.toLowerCase();
+  if (key.includes("approved")) return "Approved tenant request";
+  if (key.includes("provision")) return "Provisioned tenant";
+  if (key.includes("impersonat")) return "Started impersonation session";
+  if (key.includes("rejected")) return "Rejected tenant request";
+  if (key.includes("created")) return "Created record";
+  if (key.includes("plan")) return "Updated plan";
+  if (key.includes("flag")) return "Updated feature flag";
+  if (key.includes("suspend")) return "Suspended tenant";
+  if (key.includes("login")) return "Signed in";
+  return action;
 }
