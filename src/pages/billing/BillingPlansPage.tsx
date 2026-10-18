@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, Clock, FileText, Plus } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
 import {
   Button,
-  DataTable,
   DeltaPill,
+  EmptyState,
   ErrorState,
   Field,
   Modal,
@@ -13,25 +13,28 @@ import {
   StatCard,
   StatusChip,
   inputClass,
-  type Column,
 } from "@/components/ui";
-import { platformApi } from "@/lib/platformApi";
+import { platformApi, computeBillingKpis } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
-import { billingInvoiceRows, billingKpis } from "@/mocks/platform";
+import { describeApiError } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import type { PlatformPlan } from "@/lib/platformTypes";
 
 type Tone = "success" | "warning" | "danger" | "info" | "neutral";
 
-const statusTone: Record<string, Tone> = { Paid: "success", Overdue: "danger", Pending: "warning" };
+const statusTone: Record<string, Tone> = { Active: "success", Inactive: "danger" };
 
 export function BillingPlansPage() {
   const { data, loading, error, reload } = useAsync(() => platformApi.listPlans(), []);
+  const { data: tenantsData } = useAsync(() => platformApi.listTenants(), []);
+
   const [newOpen, setNewOpen] = useState(false);
   const [form, setForm] = useState({ name: "", monthlyPrice: "", maxWarehouses: "5", maxUserSeats: "20" });
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const invoices = data?.source === "mock" ? billingInvoiceRows : billingInvoiceRows;
+  const plans = data?.items ?? [];
+  const kpis = useMemo(() => computeBillingKpis(plans, tenantsData?.items ?? []), [plans, tenantsData]);
 
   async function createPlan() {
     setBusy(true);
@@ -48,27 +51,16 @@ export function BillingPlansPage() {
         maxWarehouses: Number(form.maxWarehouses) || 1,
         maxUserSeats: Number(form.maxUserSeats) || 1,
       });
+      toast.success("Plan created", `${form.name.trim()} is now available.`);
       setNewOpen(false);
       setForm({ name: "", monthlyPrice: "", maxWarehouses: "5", maxUserSeats: "20" });
       reload();
     } catch {
-      setFormError("Could not create the plan.");
+      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
   }
-
-  const invoiceColumns: Column<(typeof billingInvoiceRows)[number]>[] = [
-    { key: "tenant", header: "Tenant" },
-    { key: "plan", header: "Plan" },
-    { key: "amount", header: "Amount", mono: true },
-    { key: "lastInvoice", header: "Last Invoice", mono: true },
-    {
-      key: "status",
-      header: "Status",
-      render: (row) => <StatusChip tone={statusTone[row.status] ?? "neutral"} label={row.status} />,
-    },
-  ];
 
   return (
     <Page>
@@ -89,69 +81,70 @@ export function BillingPlansPage() {
       <div className="grid grid-cols-4 gap-4">
         <StatCard
           label="MRR"
-          value={billingKpis.mrr}
+          value={`$${kpis.mrr.toLocaleString("en-US")}`}
           icon={<FileText className="size-4" />}
-          delta={<DeltaPill direction="up">{billingKpis.mrrDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">across paying tenants</DeltaPill>}
         />
         <StatCard
-          label="Collection Rate"
-          value={
-            <>
-              {billingKpis.collectionRate}
-              <span className="ml-0.5 text-[12px] font-medium text-ink-500">{billingKpis.collectionUnit}</span>
-            </>
-          }
+          label="Active Plans"
+          value={plans.filter((p) => p.isActive).length}
           icon={<CheckCircle2 className="size-4" />}
-          delta={<DeltaPill direction="up">{billingKpis.collectionDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">{plans.length} total configured</DeltaPill>}
         />
         <StatCard
-          label="Overdue Accounts"
-          value={billingKpis.overdue}
+          label="Paying Tenants"
+          value={kpis.payingTenants}
           icon={<Clock className="size-4" />}
-          delta={
-            <DeltaPill direction="down" tone="danger">
-              {billingKpis.overdueDelta}
-            </DeltaPill>
-          }
+          delta={<DeltaPill direction="up">on a priced plan</DeltaPill>}
         />
         <StatCard
           label="Avg. Revenue / Tenant"
-          value={billingKpis.avgRevenue}
+          value={`$${Math.round(kpis.avgRevenue).toLocaleString("en-US")}`}
           icon={<BarChart3 className="size-4" />}
-          delta={<DeltaPill direction="up">{billingKpis.avgRevenueDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">from plan pricing</DeltaPill>}
         />
       </div>
 
       {loading && <Skeleton className="mt-4 h-40" />}
       {error && (
         <div className="mt-4">
-          <ErrorState onRetry={reload} />
+          <ErrorState onRetry={reload} title="Couldn't load plans" description={describeApiError(error)} />
         </div>
       )}
 
-      {!loading && !error && (
+      {!loading && !error && plans.length === 0 && (
+        <div className="mt-4">
+          <EmptyState title="No plans yet" description="Create your first subscription tier with the + New Plan button." />
+        </div>
+      )}
+
+      {!loading && !error && plans.length > 0 && (
         <div className="mt-4 grid grid-cols-3 gap-4">
-          {(data?.items ?? []).map((plan: PlatformPlan) => (
+          {plans.map((plan: PlatformPlan) => (
             <div
               key={plan.id}
-              className={`rounded-xl border bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ${
-                plan.highlighted ? "border-primary ring-1 ring-primary/30" : "border-[#ececef]"
-              }`}
+              className="rounded-xl border border-[#ececef] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
             >
-              <p className="text-[15px] font-bold text-ink-900">{plan.name}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[15px] font-bold text-ink-900">{plan.name}</p>
+                <StatusChip tone={statusTone[plan.isActive ? "Active" : "Inactive"]} label={plan.isActive ? "Active" : "Inactive"} />
+              </div>
               <p className="mt-1 text-[24px] font-bold text-ink-900">
-                {plan.priceLabel}
+                ${plan.monthlyPrice.toLocaleString("en-US")}
                 <span className="ml-0.5 text-[11px] font-medium text-ink-500">/mo</span>
               </p>
-              <p className="mt-3 text-[12px] text-ink-500">{plan.warehousesLabel}</p>
-              <p className="text-[12px] text-ink-500">{plan.seatsLabel}</p>
+              <p className="mt-3 text-[12px] text-ink-500">{plan.maxWarehouses} warehouses included</p>
+              <p className="text-[12px] text-ink-500">{plan.maxUserSeats} user seats included</p>
             </div>
           ))}
         </div>
       )}
 
       <PanelCard className="mt-4" title="Platform Invoices Across Tenants" icon={<FileText className="size-3.5" />}>
-        <DataTable columns={invoiceColumns} rows={invoices} rowKey={(row) => row.tenant} />
+        <EmptyState
+          title="Invoices endpoint not available yet"
+          description="Backend me /platform/invoices route abhi exist nahi karta — isliye yahan koi invoice nahi dikhega."
+        />
       </PanelCard>
 
       <Modal open={newOpen} onClose={() => setNewOpen(false)}>

@@ -1,9 +1,10 @@
+import { useMemo } from "react";
 import { BadgeCheck, Building2, Clock, Download, Flag, ShieldCheck, UserCog, Users, Package, FileText } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
 import { DeltaPill, ErrorState, PanelCard, SkeletonTable, StatCard } from "@/components/ui";
-import { platformApi } from "@/lib/platformApi";
+import { platformApi, computeAuditKpis } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
-import { auditKpis } from "@/mocks/platform";
+import { describeApiError } from "@/lib/api";
 import { formatDateTime } from "@/lib/time";
 import type { AuditEvent } from "@/lib/platformTypes";
 import { cn } from "@/lib/cn";
@@ -45,6 +46,11 @@ function exportCsv(events: AuditEvent[]) {
 export function AuditLogPage() {
   const { data, loading, error, reload } = useAsync(() => platformApi.listAudit(), []);
   const events = data?.items ?? [];
+  const kpis = useMemo(() => computeAuditKpis(events), [events]);
+  const impersonations = useMemo(
+    () => events.filter((e) => e.action.toLowerCase().includes("impersonat")).length,
+    [events],
+  );
 
   return (
     <Page>
@@ -67,37 +73,41 @@ export function AuditLogPage() {
       <div className="grid grid-cols-4 gap-4">
         <StatCard
           label="Events Today"
-          value={auditKpis.eventsToday}
+          value={kpis.last24h}
           icon={<ShieldCheck className="size-4" />}
-          delta={<DeltaPill direction="up">{auditKpis.eventsDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">{kpis.total} total logged</DeltaPill>}
         />
         <StatCard
-          label="Active Staff"
-          value={auditKpis.activeStaff}
+          label="Unique Actions"
+          value={kpis.uniqueActions}
           icon={<Users className="size-4" />}
-          delta={<DeltaPill direction="up">{auditKpis.activeStaffDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">distinct action types</DeltaPill>}
         />
         <StatCard
-          label="Tenant Actions"
-          value={auditKpis.tenantActions}
+          label="Total Events"
+          value={kpis.total}
           icon={<Building2 className="size-4" />}
-          delta={<DeltaPill direction="up">{auditKpis.tenantActionsDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">in the audit log</DeltaPill>}
         />
         <StatCard
           label="Impersonation Events"
-          value={auditKpis.impersonations}
+          value={impersonations}
           icon={<Clock className="size-4" />}
           delta={
-            <DeltaPill direction="down" tone="danger">
-              {auditKpis.impersonationsDelta}
-            </DeltaPill>
+            impersonations > 0 ? (
+              <DeltaPill direction="down" tone="danger">
+                review these
+              </DeltaPill>
+            ) : (
+              <DeltaPill direction="up">none recorded</DeltaPill>
+            )
           }
         />
       </div>
 
       <PanelCard className="mt-4" title="Platform Audit Log" icon={<ShieldCheck className="size-3.5" />}>
         {loading && <SkeletonTable rows={6} cols={3} />}
-        {error && <ErrorState onRetry={reload} />}
+        {error && <ErrorState onRetry={reload} description={describeApiError(error)} />}
         {!loading && !error && events.length === 0 && (
           <p className="py-6 text-center text-[12px] text-ink-500">No audit events yet. Platform actions will appear here.</p>
         )}

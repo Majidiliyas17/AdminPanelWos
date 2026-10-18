@@ -16,7 +16,8 @@ import {
 } from "@/components/ui";
 import { platformApi } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
-import { tenantKpis } from "@/mocks/platform";
+import { computeTenantKpis } from "@/lib/platformApi";
+import { describeApiError } from "@/lib/api";
 import type { TenantRow } from "@/lib/platformTypes";
 
 type Tone = "success" | "warning" | "danger" | "info" | "neutral";
@@ -45,17 +46,11 @@ export function TenantsListPage() {
     return list;
   }, [data, tab, query]);
 
-  const kpis = useMemo(() => {
-    const all = data?.items ?? [];
-    if (!all.length || data?.source === "api") {
-      return {
-        total: all.length || tenantKpis.total,
-        active: all.filter((t) => t.status === "Active").length || tenantKpis.active,
-        trial: all.filter((t) => t.status === "Trial").length || tenantKpis.trial,
-        suspended: all.filter((t) => t.status === "Suspended").length || tenantKpis.suspended,
-      };
-    }
-    return tenantKpis;
+  const kpis = useMemo(() => computeTenantKpis(data?.items ?? []), [data]);
+
+  const countries = useMemo(() => {
+    const set = new Set((data?.items ?? []).map((t) => t.country).filter(Boolean));
+    return set.size;
   }, [data]);
 
   const columns: Column<TenantRow>[] = [
@@ -70,8 +65,8 @@ export function TenantsListPage() {
     },
     { key: "code", header: "Tenant ID", mono: true },
     { key: "plan", header: "Plan" },
-    { key: "warehouses", header: "Warehouses" },
-    { key: "since", header: "Since", mono: true },
+    { key: "warehouses", header: "Warehouses", render: (row) => row.warehouses ?? "—" },
+    { key: "since", header: "Since", mono: true, render: (row) => row.since ?? "—" },
     {
       key: "status",
       header: "Status",
@@ -99,28 +94,36 @@ export function TenantsListPage() {
           label="Total Tenants"
           value={kpis.total}
           icon={<Building2 className="size-4" />}
-          delta={<DeltaPill direction="up">{tenantKpis.totalDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">{countries ? `across ${countries} countries` : "no tenants yet"}</DeltaPill>}
         />
         <StatCard
           label="Active"
           value={kpis.active}
           icon={<CheckCircle2 className="size-4" />}
-          delta={<DeltaPill direction="up">{tenantKpis.activeDelta}</DeltaPill>}
+          delta={
+            <DeltaPill direction="up">
+              {kpis.total ? `${Math.round((kpis.active / kpis.total) * 100)}% of total` : "—"}
+            </DeltaPill>
+          }
         />
         <StatCard
           label="Trial"
           value={kpis.trial}
           icon={<Clock className="size-4" />}
-          delta={<DeltaPill direction="up">{tenantKpis.trialDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">{kpis.trial ? "converting" : "none in trial"}</DeltaPill>}
         />
         <StatCard
           label="Suspended"
           value={kpis.suspended}
           icon={<PackageX className="size-4" />}
           delta={
-            <DeltaPill direction="down" tone="danger">
-              {tenantKpis.suspendedDelta}
-            </DeltaPill>
+            kpis.suspended > 0 ? (
+              <DeltaPill direction="down" tone="danger">
+                needs attention
+              </DeltaPill>
+            ) : (
+              <DeltaPill direction="up">all healthy</DeltaPill>
+            )
           }
         />
       </div>
@@ -145,7 +148,7 @@ export function TenantsListPage() {
         </div>
         <div className="p-4 pt-2">
           {loading && <SkeletonTable rows={6} cols={6} />}
-          {error && <ErrorState onRetry={reload} />}
+          {error && <ErrorState onRetry={reload} description={describeApiError(error)} />}
           {!loading && !error && rows.length === 0 && (
             <EmptyState title="No tenants match" description="Try another status tab or clear the search." />
           )}
