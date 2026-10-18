@@ -4,29 +4,22 @@ import { BarChart3, CheckCircle2, FileText, Users, Home, ShieldAlert, UserCog } 
 import { Page, PageHeader } from "@/components/layout/shell";
 import {
   Button,
-  DataTable,
   DeltaPill,
+  EmptyState,
   ErrorState,
   Field,
   Modal,
   PanelCard,
   Skeleton,
   StatCard,
-  StatusChip,
   inputClass,
-  type Column,
 } from "@/components/ui";
 import { platformApi } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
+import { describeApiError } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
-type Tone = "success" | "warning" | "danger" | "info" | "neutral";
-
-const statusTone: Record<string, Tone> = {
-  Active: "success",
-  Trial: "warning",
-  Suspended: "danger",
-  Provisioning: "info",
-};
+const DASH = "—";
 
 export function TenantDetailsPage() {
   const { tenantId = "" } = useParams();
@@ -38,7 +31,6 @@ export function TenantDetailsPage() {
   const [impersonateOpen, setImpersonateOpen] = useState(false);
   const [ticket, setTicket] = useState("");
   const [busy, setBusy] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [impersonation, setImpersonation] = useState<{ token: string; email: string } | null>(null);
 
   if (loading) {
@@ -61,7 +53,7 @@ export function TenantDetailsPage() {
   if (error || !tenant) {
     return (
       <Page>
-        <ErrorState onRetry={reload} />
+        <ErrorState onRetry={reload} title="Couldn't load this tenant" description={describeApiError(error)} />
       </Page>
     );
   }
@@ -71,14 +63,14 @@ export function TenantDetailsPage() {
   async function suspend() {
     if (!reason.trim()) return;
     setBusy(true);
-    setActionError(null);
     try {
       await platformApi.suspendTenant(tenant!.id);
+      toast.success("Tenant suspended", `${tenant!.name} is now suspended.`);
       setSuspendOpen(false);
       setReason("");
       reload();
     } catch {
-      setActionError("Could not suspend this tenant.");
+      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -86,12 +78,12 @@ export function TenantDetailsPage() {
 
   async function reactivate() {
     setBusy(true);
-    setActionError(null);
     try {
       await platformApi.reactivateTenant(tenant!.id);
+      toast.success("Tenant reactivated", `${tenant!.name} is active again.`);
       reload();
     } catch {
-      setActionError("Could not reactivate this tenant.");
+      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -100,18 +92,20 @@ export function TenantDetailsPage() {
   async function impersonate() {
     if (ticket.trim().length < 5) return;
     setBusy(true);
-    setActionError(null);
     try {
       const session = await platformApi.impersonateTenant(tenant!.id, ticket.trim());
       setImpersonation({ token: session.token, email: session.email });
+      toast.success("Impersonation started", `Session opened for ${session.email}.`);
       setImpersonateOpen(false);
     } catch {
-      setActionError("Impersonation failed. Tenant or target user may not exist.");
+      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
   }
 
+  // Backend PlatformTenantSummary: sirf yeh fields aati hain.
+  // Jo nahi aata (warehouses, users, health) — dikhate hain "—".
   const infoRows: Array<[string, React.ReactNode]> = [
     [
       "Tenant ID",
@@ -119,29 +113,12 @@ export function TenantDetailsPage() {
         {tenant.code}
       </span>,
     ],
-    ["Plan", tenant.plan],
-    ["Warehouses", tenant.plan === "Enterprise" ? `${tenant.warehouses} of unlimited` : `${tenant.warehouses}`],
-    ["User Seats", `${tenant.activeUsers} of ${tenant.userSeats}`],
-    ["Billing Currency", tenant.currency],
-    ["Region", `${tenant.regionCount} region${tenant.regionCount === 1 ? "" : "s"}`],
-    ["Member Since", tenant.memberSince],
-  ];
-
-  const usageColumns: Column<(typeof tenant.usage)[number]>[] = [
-    { key: "metric", header: "Metric" },
-    { key: "current", header: "Current", mono: true },
-    { key: "limit", header: "Limit / Detail", mono: true },
-  ];
-
-  const invoiceColumns: Column<(typeof tenant.platformInvoices)[number]>[] = [
-    { key: "invoice", header: "Invoice", mono: true },
-    { key: "period", header: "Period" },
-    { key: "amount", header: "Amount", mono: true },
-    {
-      key: "status",
-      header: "Status",
-      render: (row) => <StatusChip tone={statusTone[row.status] ?? "neutral"} label={row.status} />,
-    },
+    ["Plan", tenant.plan || DASH],
+    ["Warehouses", tenant.warehouses ?? DASH],
+    ["User Seats", tenant.userSeats ?? DASH],
+    ["Billing Currency", tenant.currency || DASH],
+    ["Country", tenant.country || DASH],
+    ["Member Since", tenant.memberSince ?? DASH],
   ];
 
   return (
@@ -149,7 +126,7 @@ export function TenantDetailsPage() {
       <PageHeader
         breadcrumb={["WarehouseOS", "Platform Console", "Tenants", tenant.name]}
         title={tenant.name}
-        subtitle={`${tenant.code} · ${tenant.plan} · Customer since ${tenant.memberSince}`}
+        subtitle={`${tenant.code} · ${tenant.plan || "No plan"}${tenant.memberSince ? ` · Customer since ${tenant.memberSince}` : ""}`}
         action={
           <>
             <Button variant="secondary" onClick={() => setImpersonateOpen(true)}>
@@ -173,43 +150,48 @@ export function TenantDetailsPage() {
         }
       />
 
-      {actionError && <p className="mb-3 rounded-lg bg-danger-tint px-3 py-2 text-[11px] text-danger">{actionError}</p>}
-
       <div className="grid grid-cols-4 gap-4">
         <StatCard
           label="MRR"
-          value={`$${tenant.mrr.toLocaleString("en-US")}`}
+          value={tenant.mrr != null ? `$${tenant.mrr.toLocaleString("en-US")}` : DASH}
           icon={<FileText className="size-4" />}
-          delta={<DeltaPill direction="up">{tenant.plan} plan</DeltaPill>}
+          delta={<DeltaPill direction="up">{tenant.plan || "no plan"}</DeltaPill>}
         />
         <StatCard
           label="Warehouses"
-          value={tenant.warehouses}
+          value={tenant.warehouses ?? DASH}
           icon={<Home className="size-4" />}
-          delta={<DeltaPill direction="up">{tenant.country}</DeltaPill>}
+          delta={<DeltaPill direction="up">{tenant.country || DASH}</DeltaPill>}
         />
         <StatCard
           label="Active Users"
           value={
-            <>
-              {tenant.activeUsers}
-              <span className="ml-1 text-[11px] font-medium text-ink-500">of {tenant.userSeats} seats</span>
-            </>
+            tenant.activeUsers != null && tenant.userSeats != null ? (
+              <>
+                {tenant.activeUsers}
+                <span className="ml-1 text-[11px] font-medium text-ink-500">of {tenant.userSeats} seats</span>
+              </>
+            ) : (
+              DASH
+            )
           }
           icon={<Users className="size-4" />}
-          delta={<DeltaPill direction="up">up</DeltaPill>}
         />
         <StatCard
           label="Health Score"
           value={
-            <>
-              {tenant.healthScore}
-              <span className="ml-1 text-[11px] font-medium text-ink-500">/100</span>
-            </>
+            tenant.healthScore != null ? (
+              <>
+                {tenant.healthScore}
+                <span className="ml-1 text-[11px] font-medium text-ink-500">/100</span>
+              </>
+            ) : (
+              DASH
+            )
           }
           icon={<CheckCircle2 className="size-4" />}
           delta={
-            tenant.healthScore >= 70 ? (
+            tenant.healthScore == null ? undefined : tenant.healthScore >= 70 ? (
               <DeltaPill direction="up">no open issues</DeltaPill>
             ) : (
               <DeltaPill direction="down" tone="danger">
@@ -221,7 +203,7 @@ export function TenantDetailsPage() {
       </div>
 
       <div className="mt-4 grid grid-cols-2 items-start gap-4">
-        <PanelCard title="Tenant Information" icon={<Building2Icon />}>
+        <PanelCard title="Tenant Information" icon={<Home className="size-3.5" />}>
           <dl>
             {infoRows.map(([label, value]) => (
               <div key={label} className="flex items-center justify-between border-b border-[#f3f4f6] py-2.5 last:border-0">
@@ -233,29 +215,18 @@ export function TenantDetailsPage() {
         </PanelCard>
 
         <PanelCard title="Platform Usage" icon={<BarChart3 className="size-3.5" />}>
-          {tenant.usage.length === 0 ? (
-            <p className="text-[12px] text-ink-500">No usage recorded yet.</p>
-          ) : (
-            <DataTable columns={usageColumns} rows={tenant.usage} rowKey={(row) => row.metric} />
-          )}
+          <EmptyState
+            title="Usage data not available yet"
+            description="Platform usage metrics ke liye backend ka /platform/tenants/{id}/usage endpoint abhi live nahi hai."
+          />
         </PanelCard>
       </div>
 
-      <PanelCard
-        className="mt-4"
-        title="Platform Invoices"
-        icon={<FileText className="size-3.5" />}
-        action={
-          <Link to="/billing" className="text-[11px] font-semibold text-primary hover:underline">
-            View All
-          </Link>
-        }
-      >
-        {tenant.platformInvoices.length === 0 ? (
-          <p className="text-[12px] text-ink-500">No platform invoices yet.</p>
-        ) : (
-          <DataTable columns={invoiceColumns} rows={tenant.platformInvoices} rowKey={(row) => row.invoice} />
-        )}
+      <PanelCard className="mt-4" title="Platform Invoices" icon={<FileText className="size-3.5" />}>
+        <EmptyState
+          title="Invoices not available yet"
+          description="Platform invoices ke liye backend ka /platform/invoices endpoint abhi live nahi hai."
+        />
       </PanelCard>
 
       <Modal open={suspendOpen} onClose={() => setSuspendOpen(false)}>
@@ -264,8 +235,8 @@ export function TenantDetailsPage() {
         </span>
         <h3 className="mt-3 text-[16px] font-bold text-ink-900">Suspend {tenant.name}?</h3>
         <p className="mt-1 text-[12px] text-ink-500">
-          All {tenant.warehouses} warehouses, {tenant.activeUsers} users and API access will be immediately blocked. Data
-          is retained for 90 days. This action is logged and can be reversed by a Super Admin.
+          All warehouses, users and API access will be immediately blocked. Data is retained. This action is logged and
+          can be reversed by a Super Admin.
         </p>
         <Field label="Reason (required, visible in audit log)" className="mt-4">
           <input
@@ -333,8 +304,4 @@ export function TenantDetailsPage() {
       </p>
     </Page>
   );
-}
-
-function Building2Icon() {
-  return <Home className="size-3.5" />;
 }

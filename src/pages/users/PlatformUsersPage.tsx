@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Clock, Plus, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
 import {
@@ -15,15 +15,24 @@ import {
   inputClass,
   type Column,
 } from "@/components/ui";
-import { platformApi } from "@/lib/platformApi";
+import { platformApi, computeUserKpis } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
-import { roleCards, userKpis } from "@/mocks/platform";
+import { describeApiError } from "@/lib/api";
+import { toast } from "@/lib/toast";
+import { roleCards } from "@/lib/consoleConfig";
 import type { PlatformStaff } from "@/lib/platformTypes";
 
 type Tone = "success" | "warning" | "danger" | "info" | "neutral";
 
 const statusTone: Record<string, Tone> = { Active: "success", Inactive: "danger" };
-const ROLE_OPTIONS = ["Super Admin", "Support Lead", "Support", "Billing Ops"];
+const ROLE_OPTIONS = ["SuperAdmin", "Support Lead", "Support", "Billing Ops"];
+
+interface CreatedStaff {
+  email: string;
+  role: string;
+  mfaSecret: string;
+  recoveryCodes: string[];
+}
 
 export function PlatformUsersPage() {
   const { data, loading, error, reload } = useAsync(() => platformApi.listStaff(), []);
@@ -31,7 +40,10 @@ export function PlatformUsersPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "Support" });
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [created, setCreated] = useState<{ secret: string; codes: string[] } | null>(null);
+  const [created, setCreated] = useState<CreatedStaff | null>(null);
+
+  const staff = data?.items ?? [];
+  const kpis = useMemo(() => computeUserKpis(staff), [staff]);
 
   async function addStaff() {
     setBusy(true);
@@ -47,12 +59,18 @@ export function PlatformUsersPage() {
         password: form.password,
         role: form.role,
       });
-      setCreated({ secret: result.mfaSecret, codes: [...result.recoveryCodes] });
+      setCreated({
+        email: result.email,
+        role: result.role,
+        mfaSecret: result.mfaSecret,
+        recoveryCodes: [...result.recoveryCodes],
+      });
+      toast.success("Platform user created", `${result.email} added as ${result.role}.`);
       setAddOpen(false);
       setForm({ name: "", email: "", password: "", role: "Support" });
       reload();
     } catch {
-      setFormError("Could not create the platform user.");
+      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -63,11 +81,12 @@ export function PlatformUsersPage() {
     { key: "role", header: "Role" },
     { key: "email", header: "Email", mono: true },
     {
-      key: "status",
+      key: "isActive",
       header: "Status",
-      render: (row) => <StatusChip tone={statusTone[row.status] ?? "neutral"} label={row.status} />,
+      render: (row) => (
+        <StatusChip tone={statusTone[row.isActive ? "Active" : "Inactive"]} label={row.isActive ? "Active" : "Inactive"} />
+      ),
     },
-    { key: "lastLogin", header: "Last Login", mono: true },
   ];
 
   return (
@@ -89,27 +108,35 @@ export function PlatformUsersPage() {
       <div className="grid grid-cols-4 gap-4">
         <StatCard
           label="Platform Staff"
-          value={userKpis.staff}
+          value={kpis.total}
           icon={<Users className="size-4" />}
-          delta={<DeltaPill direction="up">{userKpis.staffDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">{kpis.total ? "with console access" : "none yet"}</DeltaPill>}
         />
         <StatCard
           label="Super Admins"
-          value={userKpis.superAdmins}
+          value={kpis.superAdmins}
           icon={<ShieldCheck className="size-4" />}
-          delta={<DeltaPill direction="up">{userKpis.superAdminsDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">full platform access</DeltaPill>}
         />
         <StatCard
-          label="Support Staff"
-          value={userKpis.support}
+          label="Active"
+          value={kpis.active}
           icon={<UserCheck className="size-4" />}
-          delta={<DeltaPill direction="up">{userKpis.supportDelta}</DeltaPill>}
+          delta={<DeltaPill direction="up">{kpis.inactive} inactive</DeltaPill>}
         />
         <StatCard
-          label="Active Today"
-          value={userKpis.activeToday}
+          label="Inactive"
+          value={kpis.inactive}
           icon={<Clock className="size-4" />}
-          delta={<DeltaPill direction="up">{userKpis.activeTodayDelta}</DeltaPill>}
+          delta={
+            kpis.inactive > 0 ? (
+              <DeltaPill direction="down" tone="danger">
+                needs attention
+              </DeltaPill>
+            ) : (
+              <DeltaPill direction="up">all active</DeltaPill>
+            )
+          }
         />
       </div>
 
@@ -124,10 +151,8 @@ export function PlatformUsersPage() {
 
       <PanelCard className="mt-4" title="Platform Staff" icon={<Users className="size-3.5" />}>
         {loading && <SkeletonTable rows={5} cols={5} />}
-        {error && <ErrorState onRetry={reload} />}
-        {!loading && !error && (
-          <DataTable columns={columns} rows={data?.items ?? []} rowKey={(row) => row.id} empty="No platform staff yet" />
-        )}
+        {error && <ErrorState onRetry={reload} description={describeApiError(error)} />}
+        {!loading && !error && <DataTable columns={columns} rows={staff} rowKey={(row) => row.id} empty="No platform staff yet" />}
       </PanelCard>
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)}>
@@ -160,11 +185,7 @@ export function PlatformUsersPage() {
             />
           </Field>
           <Field label="Role">
-            <select
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-              className={inputClass}
-            >
+            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputClass}>
               {ROLE_OPTIONS.map((role) => (
                 <option key={role} value={role}>
                   {role}
@@ -189,10 +210,10 @@ export function PlatformUsersPage() {
         <h3 className="text-[16px] font-bold text-ink-900">Staff created — copy now</h3>
         <p className="mt-1 text-[12px] text-ink-500">This is the only time the authenticator secret and codes are shown.</p>
         <p className="mt-3 text-[11px] font-semibold text-[#374151]">TOTP secret</p>
-        <pre className="rounded-lg bg-[#f9fafb] p-2 font-mono text-[11px] break-all">{created?.secret}</pre>
+        <pre className="rounded-lg bg-[#f9fafb] p-2 font-mono text-[11px] break-all">{created?.mfaSecret}</pre>
         <p className="mt-3 text-[11px] font-semibold text-[#374151]">Recovery codes</p>
         <ul className="rounded-lg bg-[#f9fafb] p-2 font-mono text-[11px]">
-          {created?.codes.map((code) => (
+          {created?.recoveryCodes.map((code) => (
             <li key={code}>{code}</li>
           ))}
         </ul>

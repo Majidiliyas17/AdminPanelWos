@@ -4,6 +4,8 @@ import { Page, PageHeader } from "@/components/layout/shell";
 import { DataTable, DeltaPill, ErrorState, PanelCard, Skeleton, StatCard, StatusChip, type Column } from "@/components/ui";
 import { platformApi } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
+import { describeApiError } from "@/lib/api";
+import { useAdminAuth } from "@/lib/auth";
 import { relativeTime } from "@/lib/time";
 import type { ApprovalRequest } from "@/lib/platformTypes";
 
@@ -23,7 +25,10 @@ const statusTone: Record<string, Tone> = {
 };
 
 export function PlatformDashboardPage() {
+  const { user } = useAdminAuth();
+  const firstName = (user?.name ?? "").split(" ")[0] || "there";
   const { data, loading, error, reload } = useAsync(() => platformApi.dashboard(), []);
+  const subtitle = `Good morning, ${firstName} · here's how the platform is performing today`;
 
   if (loading) {
     return (
@@ -31,7 +36,7 @@ export function PlatformDashboardPage() {
         <PageHeader
           breadcrumb={["WarehouseOS", "Platform Console", "Dashboard"]}
           title="Platform Dashboard"
-          subtitle="Good morning, Riya · here's how the platform is performing today"
+          subtitle={subtitle}
         />
         <div className="grid grid-cols-4 gap-4">
           {[0, 1, 2, 3].map((i) => (
@@ -47,7 +52,12 @@ export function PlatformDashboardPage() {
   if (error) {
     return (
       <Page>
-        <ErrorState onRetry={reload} />
+        <PageHeader
+          breadcrumb={["WarehouseOS", "Platform Console", "Dashboard"]}
+          title="Platform Dashboard"
+          subtitle={subtitle}
+        />
+        <ErrorState onRetry={reload} description={describeApiError(error)} />
       </Page>
     );
   }
@@ -71,7 +81,7 @@ export function PlatformDashboardPage() {
       <PageHeader
         breadcrumb={["WarehouseOS", "Platform Console", "Dashboard"]}
         title="Platform Dashboard"
-        subtitle="Good morning, Riya · here's how the platform is performing today"
+        subtitle={subtitle}
       />
 
       <div className="grid grid-cols-4 gap-4">
@@ -92,9 +102,13 @@ export function PlatformDashboardPage() {
           value={kpis.pendingApprovals}
           icon={<Clock className="size-4" />}
           delta={
-            <DeltaPill direction="down" tone="danger">
-              {kpis.pendingApprovalsDelta}
-            </DeltaPill>
+            kpis.pendingApprovals > 0 ? (
+              <DeltaPill direction="down" tone="danger">
+                {kpis.pendingApprovalsDelta}
+              </DeltaPill>
+            ) : (
+              <DeltaPill direction="up">{kpis.pendingApprovalsDelta}</DeltaPill>
+            )
           }
         />
         <StatCard

@@ -1,3 +1,10 @@
+// Backend DTO shapes (Backend/src/WarehouseOS.Application/Modules/Platform):
+//   TenantRequestSummary / TenantRequestDetails
+//   PlatformTenantSummary / PlatformPlanSummary
+//   FeatureFlagSummary / PlatformUserSummary / PlatformAuditSummary
+//   TenantProvisioned (approve se)
+// Jo fields backend abhi nahi bhejta, wo optional hain — UI unhe "—"
+// dikhata hai, fake number nahi.
 export interface ApprovalRequest {
   id: string;
   companyName: string;
@@ -8,36 +15,27 @@ export interface ApprovalRequest {
   requestedPlan: string;
   status: string;
   submittedAtUtc: string;
-  estimatedWarehouses?: number;
-  estimatedMrr?: string;
-  region?: string;
-  checks?: number;
+  reviewedAtUtc?: string | null;
+  reviewNote?: string | null;
 }
 
 export interface TenantRow {
   id: string;
   name: string;
   code: string;
+  planId?: string | null;
   plan: string;
-  warehouses: number;
-  since: string;
   status: string;
   country: string;
   currency: string;
-  mrr: number;
-  healthScore: number;
-  activeUsers: number;
-  userSeats: number;
-  regionCount: number;
-  memberSince: string;
-  platformInvoices: { invoice: string; period: string; amount: string; status: string }[];
-  usage: TenantUsageMetric[];
-}
-
-export interface TenantUsageMetric {
-  metric: string;
-  current: string;
-  limit: string;
+  // Optional: inhe platform API abhi nahi bhejta (tenant-scoped data hai)
+  warehouses?: number;
+  since?: string;
+  mrr?: number;
+  healthScore?: number;
+  activeUsers?: number;
+  userSeats?: number;
+  memberSince?: string;
 }
 
 export interface PlatformPlan {
@@ -46,11 +44,7 @@ export interface PlatformPlan {
   monthlyPrice: number;
   maxWarehouses: number;
   maxUserSeats: number;
-  warehousesLabel: string;
-  seatsLabel: string;
-  priceLabel: string;
-  highlighted: boolean;
-  active: boolean;
+  isActive: boolean;
 }
 
 export interface FeatureFlagRow {
@@ -58,42 +52,34 @@ export interface FeatureFlagRow {
   key: string;
   name: string;
   description: string;
-  starter: boolean;
-  growth: boolean;
-  enterprise: boolean;
-  active: boolean;
-}
-
-export interface TenantOverride {
-  tenant: string;
-  feature: string;
-  override: string;
-  setBy: string;
+  isActive: boolean;
 }
 
 export interface PlatformStaff {
   id: string;
   name: string;
-  role: string;
   email: string;
-  status: string;
-  lastLogin: string;
+  role: string;
+  isActive: boolean;
+}
+
+// POST /platform/users ka response — MFA secret + recovery codes
+// ek hi baar aate hain (baadme DB me sirf protected copy).
+export interface CreatedPlatformStaff {
+  id: string;
+  email: string;
+  role: string;
+  mfaSecret: string;
+  authenticatorUri: string;
+  recoveryCodes: string[];
 }
 
 export interface AuditEvent {
   id: string;
+  action: string;
   title: string;
   detail: string;
   timestampUtc: string;
-  action: string;
-}
-
-export interface BillingInvoiceRow {
-  tenant: string;
-  plan: string;
-  amount: string;
-  lastInvoice: string;
-  status: string;
 }
 
 export interface ProvisionedTenant {
@@ -102,10 +88,27 @@ export interface ProvisionedTenant {
   inviteUrl?: string;
 }
 
-export interface ImpersonationSession {
-  userId: string;
-  email: string;
-  tenantId: string;
-  token: string;
-  referenceTicket: string;
+export interface PlatformDashboard {
+  kpis: {
+    totalTenants: number;
+    totalTenantsDelta: string;
+    activeTenants: number;
+    activeTenantsDelta: string;
+    pendingApprovals: number;
+    pendingApprovalsDelta: string;
+    mrr: string;
+    mrrDelta: string;
+  };
+  pendingRequests: ApprovalRequest[];
+  topTenants: TopTenantRow[];
 }
+
+export interface TopTenantRow {
+  tenant: string;
+  plan: string;
+  footprint: string;
+  mrr: string;
+  status: string;
+}
+
+export type TenantUsageMetric = never; // abhi backend usage nahi bhejta

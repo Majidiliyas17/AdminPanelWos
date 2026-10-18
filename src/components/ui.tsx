@@ -270,12 +270,20 @@ export function EmptyState({
   );
 }
 
-export function ErrorState({ onRetry }: { onRetry?: () => void }) {
+export function ErrorState({
+  onRetry,
+  description,
+  title,
+}: {
+  onRetry?: () => void;
+  description?: string;
+  title?: string;
+}) {
   return (
     <EmptyState
       tone="danger"
-      title="Couldn't load this page"
-      description="Something went wrong on our end. Try again."
+      title={title ?? "Couldn't load this page"}
+      description={description ?? "Something went wrong on our end. Try again."}
       action={
         onRetry && (
           <Button variant="secondary" onClick={onRetry}>
