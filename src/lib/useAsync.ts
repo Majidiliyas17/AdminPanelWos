@@ -7,7 +7,10 @@ export interface AsyncState<T> {
   reload: () => void;
 }
 
-export function useAsync<T>(loader: () => Promise<T>, deps: unknown[] = []): AsyncState<T> {
+export function useAsync<T>(
+  loader: () => Promise<T>,
+  deps: unknown[] = [],
+): AsyncState<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -24,7 +27,8 @@ export function useAsync<T>(loader: () => Promise<T>, deps: unknown[] = []): Asy
         if (!cancelled) setData(result);
       })
       .catch((err: unknown) => {
-        if (!cancelled) setError(err instanceof Error ? err : new Error(String(err)));
+        if (!cancelled)
+          setError(err instanceof Error ? err : new Error(String(err)));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

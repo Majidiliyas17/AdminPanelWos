@@ -19,7 +19,15 @@ const dotMap: Record<Tone, string> = {
   neutral: "bg-ink-muted",
 };
 
-export function StatusChip({ tone = "neutral", label, className }: { tone?: Tone; label: string; className?: string }) {
+export function StatusChip({
+  tone = "neutral",
+  label,
+  className,
+}: {
+  tone?: Tone;
+  label: string;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
@@ -34,9 +42,22 @@ export function StatusChip({ tone = "neutral", label, className }: { tone?: Tone
   );
 }
 
-export function DeltaPill({ direction, tone = "success", children }: { direction: "up" | "down"; tone?: Tone; children: ReactNode }) {
+export function DeltaPill({
+  direction,
+  tone = "success",
+  children,
+}: {
+  direction: "up" | "down";
+  tone?: Tone;
+  children: ReactNode;
+}) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold", toneMap[tone])}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+        toneMap[tone],
+      )}
+    >
       {direction === "up" ? "↑" : "↓"} {children}
     </span>
   );
@@ -45,10 +66,12 @@ export function DeltaPill({ direction, tone = "success", children }: { direction
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
 const btnVariants: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-white hover:bg-primary-dark border border-transparent",
+  primary:
+    "bg-primary text-white hover:bg-primary-dark border border-transparent",
   secondary: "bg-white text-ink-900 border border-line hover:bg-[#f9fafb]",
   danger: "bg-danger text-white hover:bg-[#b91c1c] border border-transparent",
-  ghost: "bg-transparent text-primary hover:bg-primary-tint border border-transparent",
+  ghost:
+    "bg-transparent text-primary hover:bg-primary-tint border border-transparent",
 };
 
 export function Button({
@@ -56,7 +79,9 @@ export function Button({
   className,
   children,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+}) {
   return (
     <button
       className={cn(
@@ -87,11 +112,20 @@ export function PanelCard({
   children: ReactNode;
 }) {
   return (
-    <section className={cn("rounded-xl border border-[#ececef] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]", className)}>
+    <section
+      className={cn(
+        "rounded-xl border border-[#ececef] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]",
+        className,
+      )}
+    >
       {title && (
         <header className="flex items-center justify-between gap-3 border-b border-[#f3f4f6] px-4 py-3">
           <h3 className="flex items-center gap-2 text-[13px] font-semibold text-ink-900">
-            {icon && <span className="grid size-5 place-items-center rounded-md bg-violet-tint text-brand-violet">{icon}</span>}
+            {icon && (
+              <span className="grid size-5 place-items-center rounded-md bg-violet-tint text-brand-violet">
+                {icon}
+              </span>
+            )}
             {title}
           </h3>
           {action}
@@ -119,10 +153,16 @@ export function StatCard({
     <div className="rounded-xl border border-[#ececef] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
       <div className="flex items-start justify-between gap-2">
         <span className="text-[12px] font-medium text-ink-500">{label}</span>
-        {icon && <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-tint text-brand-violet">{icon}</span>}
+        {icon && (
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-tint text-brand-violet">
+            {icon}
+          </span>
+        )}
       </div>
       <div className="mt-2 flex items-baseline gap-1">
-        <span className="text-[26px] leading-none font-bold text-ink-900">{value}</span>
+        <span className="text-[26px] leading-none font-bold text-ink-900">
+          {value}
+        </span>
         {unit && <span className="text-[11px] text-ink-500">{unit}</span>}
       </div>
       {delta && <div className="mt-2">{delta}</div>}
@@ -149,7 +189,9 @@ export function Tabs({
           onClick={() => onChange?.(item)}
           className={cn(
             "rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors",
-            item === active ? "bg-primary-tint text-primary" : "text-ink-500 hover:text-ink-900",
+            item === active
+              ? "bg-primary-tint text-primary"
+              : "text-ink-500 hover:text-ink-900",
           )}
         >
           {item}
@@ -195,8 +237,16 @@ export function DataTable<T extends object>({
           {rows.map((row, i) => (
             <tr key={rowKey(row, i)} className="hover:bg-[#fafafa]">
               {columns.map((c, ci) => (
-                <td key={c.key} className={cn(c.mono && "font-mono text-[11px] text-ink-500", ci === 0 && "font-semibold")}>
-                  {c.render ? c.render(row) : ((row as Record<string, ReactNode>)[c.key] ?? "")}
+                <td
+                  key={c.key}
+                  className={cn(
+                    c.mono && "font-mono text-[11px] text-ink-500",
+                    ci === 0 && "font-semibold",
+                  )}
+                >
+                  {c.render
+                    ? c.render(row)
+                    : ((row as Record<string, ReactNode>)[c.key] ?? "")}
                 </td>
               ))}
             </tr>
@@ -207,16 +257,31 @@ export function DataTable<T extends object>({
   );
 }
 
-export function PaginationLine({ total, page, pageSize = 10 }: { total: number; page?: number; pageSize?: number }) {
+export function PaginationLine({
+  total,
+  page,
+  pageSize = 10,
+}: {
+  total: number;
+  page?: number;
+  pageSize?: number;
+}) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   return (
     <p className="pt-3 text-[11px] text-ink-500">
-      Showing 1 to {Math.min(pageSize, total)} of {total.toLocaleString()} entries · Page {page ?? 1} of {pages}
+      Showing 1 to {Math.min(pageSize, total)} of {total.toLocaleString()}{" "}
+      entries · Page {page ?? 1} of {pages}
     </p>
   );
 }
 
-export function Stepper({ steps, current }: { steps: string[]; current: number }) {
+export function Stepper({
+  steps,
+  current,
+}: {
+  steps: string[];
+  current: number;
+}) {
   return (
     <ol className="flex flex-wrap items-center justify-center gap-2">
       {steps.map((step, i) => {
@@ -234,7 +299,14 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
             >
               {done ? "✓" : i + 1}
             </span>
-            <span className={cn("text-[12px]", activeStep ? "font-bold text-ink-900" : "text-ink-500")}>{step}</span>
+            <span
+              className={cn(
+                "text-[12px]",
+                activeStep ? "font-bold text-ink-900" : "text-ink-500",
+              )}
+            >
+              {step}
+            </span>
             {i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-line" />}
           </li>
         );
@@ -262,9 +334,18 @@ export function EmptyState({
   } as const;
   return (
     <div className="grid place-items-center gap-2 rounded-xl border border-dashed border-line bg-white px-6 py-10 text-center">
-      <span className={cn("grid size-10 place-items-center rounded-xl", tones[tone])}>◇</span>
+      <span
+        className={cn(
+          "grid size-10 place-items-center rounded-xl",
+          tones[tone],
+        )}
+      >
+        ◇
+      </span>
       <p className="text-[14px] font-bold text-ink-900">{title}</p>
-      {description && <p className="max-w-sm text-[12px] text-ink-500">{description}</p>}
+      {description && (
+        <p className="max-w-sm text-[12px] text-ink-500">{description}</p>
+      )}
       {action}
     </div>
   );
@@ -296,10 +377,18 @@ export function ErrorState({
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-lg bg-[#f3f4f6]", className)} />;
+  return (
+    <div className={cn("animate-pulse rounded-lg bg-[#f3f4f6]", className)} />
+  );
 }
 
-export function SkeletonTable({ rows = 5, cols = 5 }: { rows?: number; cols?: number }) {
+export function SkeletonTable({
+  rows = 5,
+  cols = 5,
+}: {
+  rows?: number;
+  cols?: number;
+}) {
   return (
     <div className="space-y-2 p-1">
       {Array.from({ length: rows }).map((_, r) => (
@@ -334,7 +423,10 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={cn("w-full rounded-xl bg-white p-5 shadow-[0_20px_50px_rgba(16,24,40,0.2)]", width)}
+        className={cn(
+          "w-full rounded-xl bg-white p-5 shadow-[0_20px_50px_rgba(16,24,40,0.2)]",
+          width,
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -353,7 +445,12 @@ export function Field({
   className?: string;
 }) {
   return (
-    <label className={cn("block text-[11px] font-semibold text-[#374151]", className)}>
+    <label
+      className={cn(
+        "block text-[11px] font-semibold text-[#374151]",
+        className,
+      )}
+    >
       {label}
       {children}
     </label>

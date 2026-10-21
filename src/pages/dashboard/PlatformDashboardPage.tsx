@@ -1,7 +1,16 @@
 import { Link } from "react-router-dom";
 import { BadgeCheck, Building2, Clock, FileText } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
-import { DataTable, DeltaPill, ErrorState, PanelCard, Skeleton, StatCard, StatusChip, type Column } from "@/components/ui";
+import {
+  DataTable,
+  DeltaPill,
+  ErrorState,
+  PanelCard,
+  Skeleton,
+  StatCard,
+  StatusChip,
+  type Column,
+} from "@/components/ui";
 import { platformApi } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
 import { describeApiError } from "@/lib/api";
@@ -27,7 +36,10 @@ const statusTone: Record<string, Tone> = {
 export function PlatformDashboardPage() {
   const { user } = useAdminAuth();
   const firstName = (user?.name ?? "").split(" ")[0] || "there";
-  const { data, loading, error, reload } = useAsync(() => platformApi.dashboard(), []);
+  const { data, loading, error, reload } = useAsync(
+    () => platformApi.dashboard(),
+    [],
+  );
   const subtitle = `Good morning, ${firstName} · here's how the platform is performing today`;
 
   if (loading) {
@@ -64,7 +76,13 @@ export function PlatformDashboardPage() {
 
   const kpis = data!.kpis;
 
-  const topColumns: Column<{ tenant: string; plan: string; footprint: string; mrr: string; status: string }>[] = [
+  const topColumns: Column<{
+    tenant: string;
+    plan: string;
+    footprint: string;
+    mrr: string;
+    status: string;
+  }>[] = [
     { key: "tenant", header: "Tenant" },
     { key: "plan", header: "Plan" },
     { key: "footprint", header: "Footprint" },
@@ -72,7 +90,12 @@ export function PlatformDashboardPage() {
     {
       key: "status",
       header: "Status",
-      render: (row) => <StatusChip tone={statusTone[row.status] ?? "neutral"} label={row.status} />,
+      render: (row) => (
+        <StatusChip
+          tone={statusTone[row.status] ?? "neutral"}
+          label={row.status}
+        />
+      ),
     },
   ];
 
@@ -95,7 +118,9 @@ export function PlatformDashboardPage() {
           label="Active Tenants"
           value={kpis.activeTenants}
           icon={<BadgeCheck className="size-4" />}
-          delta={<DeltaPill direction="up">{kpis.activeTenantsDelta}</DeltaPill>}
+          delta={
+            <DeltaPill direction="up">{kpis.activeTenantsDelta}</DeltaPill>
+          }
         />
         <StatCard
           label="Pending Approvals"
@@ -124,14 +149,19 @@ export function PlatformDashboardPage() {
         title="Pending Tenant Requests"
         icon={<BadgeCheck className="size-3.5" />}
         action={
-          <Link to="/approvals" className="text-[11px] font-semibold text-primary hover:underline">
+          <Link
+            to="/approvals"
+            className="text-[11px] font-semibold text-primary hover:underline"
+          >
             View All
           </Link>
         }
       >
         <div className="grid grid-cols-3 gap-3">
           {data!.pendingRequests.length === 0 && (
-            <p className="col-span-3 text-[12px] text-ink-500">No pending requests right now.</p>
+            <p className="col-span-3 text-[12px] text-ink-500">
+              No pending requests right now.
+            </p>
           )}
           {data!.pendingRequests.map((request: ApprovalRequest) => (
             <Link
@@ -139,18 +169,32 @@ export function PlatformDashboardPage() {
               to={`/approvals/${request.id}`}
               className="rounded-xl border border-line bg-white p-3 transition-colors hover:border-primary/40 hover:bg-primary-tint/40"
             >
-              <StatusChip tone={statusTone[request.status] ?? "neutral"} label={request.status} />
-              <p className="mt-2 text-[13px] font-bold text-ink-900">{request.companyName}</p>
+              <StatusChip
+                tone={statusTone[request.status] ?? "neutral"}
+                label={request.status}
+              />
+              <p className="mt-2 text-[13px] font-bold text-ink-900">
+                {request.companyName}
+              </p>
               <p className="mt-0.5 text-[11px] text-ink-500">
-                Applied {relativeTime(request.submittedAtUtc)} · {request.country}
+                Applied {relativeTime(request.submittedAtUtc)} ·{" "}
+                {request.country}
               </p>
             </Link>
           ))}
         </div>
       </PanelCard>
 
-      <PanelCard className="mt-4" title="Top Tenants by MRR" icon={<Building2 className="size-3.5" />}>
-        <DataTable columns={topColumns} rows={data!.topTenants} rowKey={(row) => row.tenant} />
+      <PanelCard
+        className="mt-4"
+        title="Top Tenants by MRR"
+        icon={<Building2 className="size-3.5" />}
+      >
+        <DataTable
+          columns={topColumns}
+          rows={data!.topTenants}
+          rowKey={(row) => row.tenant}
+        />
       </PanelCard>
     </Page>
   );

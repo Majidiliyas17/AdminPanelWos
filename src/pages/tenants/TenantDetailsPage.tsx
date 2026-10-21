@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { BarChart3, CheckCircle2, FileText, Users, Home, ShieldAlert, UserCog } from "lucide-react";
+import {
+  BarChart3,
+  CheckCircle2,
+  FileText,
+  Users,
+  Home,
+  ShieldAlert,
+  UserCog,
+} from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
 import {
   Button,
@@ -24,14 +32,22 @@ const DASH = "—";
 export function TenantDetailsPage() {
   const { tenantId = "" } = useParams();
   const navigate = useNavigate();
-  const { data: tenant, loading, error, reload } = useAsync(() => platformApi.getTenant(tenantId), [tenantId]);
+  const {
+    data: tenant,
+    loading,
+    error,
+    reload,
+  } = useAsync(() => platformApi.getTenant(tenantId), [tenantId]);
 
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [impersonateOpen, setImpersonateOpen] = useState(false);
   const [ticket, setTicket] = useState("");
   const [busy, setBusy] = useState(false);
-  const [impersonation, setImpersonation] = useState<{ token: string; email: string } | null>(null);
+  const [impersonation, setImpersonation] = useState<{
+    token: string;
+    email: string;
+  } | null>(null);
 
   if (loading) {
     return (
@@ -53,7 +69,11 @@ export function TenantDetailsPage() {
   if (error || !tenant) {
     return (
       <Page>
-        <ErrorState onRetry={reload} title="Couldn't load this tenant" description={describeApiError(error)} />
+        <ErrorState
+          onRetry={reload}
+          title="Couldn't load this tenant"
+          description={describeApiError(error)}
+        />
       </Page>
     );
   }
@@ -70,7 +90,6 @@ export function TenantDetailsPage() {
       setReason("");
       reload();
     } catch {
-      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -83,7 +102,6 @@ export function TenantDetailsPage() {
       toast.success("Tenant reactivated", `${tenant!.name} is active again.`);
       reload();
     } catch {
-      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -93,23 +111,29 @@ export function TenantDetailsPage() {
     if (ticket.trim().length < 5) return;
     setBusy(true);
     try {
-      const session = await platformApi.impersonateTenant(tenant!.id, ticket.trim());
+      const session = await platformApi.impersonateTenant(
+        tenant!.id,
+        ticket.trim(),
+      );
       setImpersonation({ token: session.token, email: session.email });
-      toast.success("Impersonation started", `Session opened for ${session.email}.`);
+      toast.success(
+        "Impersonation started",
+        `Session opened for ${session.email}.`,
+      );
       setImpersonateOpen(false);
     } catch {
-      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
   }
 
-  // Backend PlatformTenantSummary: sirf yeh fields aati hain.
-  // Jo nahi aata (warehouses, users, health) — dikhate hain "—".
   const infoRows: Array<[string, React.ReactNode]> = [
     [
       "Tenant ID",
-      <span key="id" className="font-mono text-[12px] font-semibold text-primary">
+      <span
+        key="id"
+        className="font-mono text-[12px] font-semibold text-primary"
+      >
         {tenant.code}
       </span>,
     ],
@@ -129,7 +153,10 @@ export function TenantDetailsPage() {
         subtitle={`${tenant.code} · ${tenant.plan || "No plan"}${tenant.memberSince ? ` · Customer since ${tenant.memberSince}` : ""}`}
         action={
           <>
-            <Button variant="secondary" onClick={() => setImpersonateOpen(true)}>
+            <Button
+              variant="secondary"
+              onClick={() => setImpersonateOpen(true)}
+            >
               <UserCog className="size-3.5" />
               Impersonate
             </Button>
@@ -153,9 +180,13 @@ export function TenantDetailsPage() {
       <div className="grid grid-cols-4 gap-4">
         <StatCard
           label="MRR"
-          value={tenant.mrr != null ? `$${tenant.mrr.toLocaleString("en-US")}` : DASH}
+          value={
+            tenant.mrr != null ? `$${tenant.mrr.toLocaleString("en-US")}` : DASH
+          }
           icon={<FileText className="size-4" />}
-          delta={<DeltaPill direction="up">{tenant.plan || "no plan"}</DeltaPill>}
+          delta={
+            <DeltaPill direction="up">{tenant.plan || "no plan"}</DeltaPill>
+          }
         />
         <StatCard
           label="Warehouses"
@@ -169,7 +200,9 @@ export function TenantDetailsPage() {
             tenant.activeUsers != null && tenant.userSeats != null ? (
               <>
                 {tenant.activeUsers}
-                <span className="ml-1 text-[11px] font-medium text-ink-500">of {tenant.userSeats} seats</span>
+                <span className="ml-1 text-[11px] font-medium text-ink-500">
+                  of {tenant.userSeats} seats
+                </span>
               </>
             ) : (
               DASH
@@ -183,7 +216,9 @@ export function TenantDetailsPage() {
             tenant.healthScore != null ? (
               <>
                 {tenant.healthScore}
-                <span className="ml-1 text-[11px] font-medium text-ink-500">/100</span>
+                <span className="ml-1 text-[11px] font-medium text-ink-500">
+                  /100
+                </span>
               </>
             ) : (
               DASH
@@ -191,7 +226,8 @@ export function TenantDetailsPage() {
           }
           icon={<CheckCircle2 className="size-4" />}
           delta={
-            tenant.healthScore == null ? undefined : tenant.healthScore >= 70 ? (
+            tenant.healthScore == null ? undefined : tenant.healthScore >=
+              70 ? (
               <DeltaPill direction="up">no open issues</DeltaPill>
             ) : (
               <DeltaPill direction="down" tone="danger">
@@ -203,18 +239,29 @@ export function TenantDetailsPage() {
       </div>
 
       <div className="mt-4 grid grid-cols-2 items-start gap-4">
-        <PanelCard title="Tenant Information" icon={<Home className="size-3.5" />}>
+        <PanelCard
+          title="Tenant Information"
+          icon={<Home className="size-3.5" />}
+        >
           <dl>
             {infoRows.map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between border-b border-[#f3f4f6] py-2.5 last:border-0">
+              <div
+                key={label}
+                className="flex items-center justify-between border-b border-[#f3f4f6] py-2.5 last:border-0"
+              >
                 <dt className="text-[12px] text-ink-500">{label}</dt>
-                <dd className="text-[12px] font-semibold text-ink-900">{value}</dd>
+                <dd className="text-[12px] font-semibold text-ink-900">
+                  {value}
+                </dd>
               </div>
             ))}
           </dl>
         </PanelCard>
 
-        <PanelCard title="Platform Usage" icon={<BarChart3 className="size-3.5" />}>
+        <PanelCard
+          title="Platform Usage"
+          icon={<BarChart3 className="size-3.5" />}
+        >
           <EmptyState
             title="Usage data not available yet"
             description="Platform usage metrics ke liye backend ka /platform/tenants/{id}/usage endpoint abhi live nahi hai."
@@ -222,7 +269,11 @@ export function TenantDetailsPage() {
         </PanelCard>
       </div>
 
-      <PanelCard className="mt-4" title="Platform Invoices" icon={<FileText className="size-3.5" />}>
+      <PanelCard
+        className="mt-4"
+        title="Platform Invoices"
+        icon={<FileText className="size-3.5" />}
+      >
         <EmptyState
           title="Invoices not available yet"
           description="Platform invoices ke liye backend ka /platform/invoices endpoint abhi live nahi hai."
@@ -233,10 +284,13 @@ export function TenantDetailsPage() {
         <span className="grid size-10 place-items-center rounded-xl bg-danger-tint text-danger">
           <ShieldAlert className="size-5" />
         </span>
-        <h3 className="mt-3 text-[16px] font-bold text-ink-900">Suspend {tenant.name}?</h3>
+        <h3 className="mt-3 text-[16px] font-bold text-ink-900">
+          Suspend {tenant.name}?
+        </h3>
         <p className="mt-1 text-[12px] text-ink-500">
-          All warehouses, users and API access will be immediately blocked. Data is retained. This action is logged and
-          can be reversed by a Super Admin.
+          All warehouses, users and API access will be immediately blocked. Data
+          is retained. This action is logged and can be reversed by a Super
+          Admin.
         </p>
         <Field label="Reason (required, visible in audit log)" className="mt-4">
           <input
@@ -250,7 +304,11 @@ export function TenantDetailsPage() {
           <Button variant="secondary" onClick={() => setSuspendOpen(false)}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={suspend} disabled={busy || !reason.trim()}>
+          <Button
+            variant="danger"
+            onClick={suspend}
+            disabled={busy || !reason.trim()}
+          >
             Suspend Tenant
           </Button>
         </div>
@@ -260,10 +318,12 @@ export function TenantDetailsPage() {
         <span className="grid size-10 place-items-center rounded-xl bg-primary-tint text-primary">
           <UserCog className="size-5" />
         </span>
-        <h3 className="mt-3 text-[16px] font-bold text-ink-900">Impersonate {tenant.name}?</h3>
+        <h3 className="mt-3 text-[16px] font-bold text-ink-900">
+          Impersonate {tenant.name}?
+        </h3>
         <p className="mt-1 text-[12px] text-ink-500">
-          Opens a short-lived tenant session (15 min, no refresh). A mandatory reference ticket is written to the audit
-          log.
+          Opens a short-lived tenant session (15 min, no refresh). A mandatory
+          reference ticket is written to the audit log.
         </p>
         <Field label="Reference ticket (required)" className="mt-4">
           <input
@@ -277,17 +337,27 @@ export function TenantDetailsPage() {
           <Button variant="secondary" onClick={() => setImpersonateOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={impersonate} disabled={busy || ticket.trim().length < 5}>
+          <Button
+            onClick={impersonate}
+            disabled={busy || ticket.trim().length < 5}
+          >
             Start Impersonation
           </Button>
         </div>
       </Modal>
 
-      <Modal open={!!impersonation} onClose={() => setImpersonation(null)} width="max-w-lg">
-        <h3 className="text-[16px] font-bold text-ink-900">Impersonation session ready</h3>
+      <Modal
+        open={!!impersonation}
+        onClose={() => setImpersonation(null)}
+        width="max-w-lg"
+      >
+        <h3 className="text-[16px] font-bold text-ink-900">
+          Impersonation session ready
+        </h3>
         <p className="mt-1 text-[12px] text-ink-500">
-          Signed in as <strong>{impersonation?.email}</strong>. Hand this short-lived token to the Frontend app via its
-          impersonation entry point.
+          Signed in as <strong>{impersonation?.email}</strong>. Hand this
+          short-lived token to the Frontend app via its impersonation entry
+          point.
         </p>
         <pre className="mt-3 max-h-32 overflow-auto rounded-lg bg-[#f9fafb] p-3 font-mono text-[10px] break-all whitespace-pre-wrap">
           {impersonation?.token}
@@ -298,7 +368,10 @@ export function TenantDetailsPage() {
       </Modal>
 
       <p className="mt-4 text-[11px] text-ink-500">
-        <Link to="/tenants" className="font-semibold text-primary hover:underline">
+        <Link
+          to="/tenants"
+          className="font-semibold text-primary hover:underline"
+        >
           ← Back to tenants
         </Link>
       </p>
