@@ -2,22 +2,42 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, Copy, Check } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
-import { Button, ErrorState, PanelCard, Skeleton, Stepper } from "@/components/ui";
+import {
+  Button,
+  ErrorState,
+  PanelCard,
+  Skeleton,
+  Stepper,
+} from "@/components/ui";
 import { platformApi } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
 import { describeApiError } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import type { PlatformPlan, ProvisionedTenant } from "@/lib/platformTypes";
 
-const STEPS = ["Assign Plan", "Set Limits", "Generate Tenant ID", "Send Invite"];
+const STEPS = [
+  "Assign Plan",
+  "Set Limits",
+  "Generate Tenant ID",
+  "Send Invite",
+];
 
-const planLabel = (plan: PlatformPlan) => `${plan.name} — $${plan.monthlyPrice}/mo`;
+const planLabel = (plan: PlatformPlan) =>
+  `${plan.name} — $${plan.monthlyPrice}/mo`;
 
 export function ProvisionPage() {
   const { requestId = "" } = useParams();
   const navigate = useNavigate();
-  const { data: request, loading, error, reload } = useAsync(() => platformApi.getRequest(requestId), [requestId]);
-  const { data: plansData, loading: plansLoading } = useAsync(() => platformApi.listPlans(), []);
+  const {
+    data: request,
+    loading,
+    error,
+    reload,
+  } = useAsync(() => platformApi.getRequest(requestId), [requestId]);
+  const { data: plansData, loading: plansLoading } = useAsync(
+    () => platformApi.listPlans(),
+    [],
+  );
 
   const plans = plansData?.items ?? [];
 
@@ -27,13 +47,16 @@ export function ProvisionPage() {
   const [seats, setSeats] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [trial, setTrial] = useState("14 days, no card required");
-  const [provisioned, setProvisioned] = useState<ProvisionedTenant | null>(null);
+  const [provisioned, setProvisioned] = useState<ProvisionedTenant | null>(
+    null,
+  );
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!request || !plans.length) return;
-    const match = plans.find((p) => p.name === request.requestedPlan) ?? plans[0];
+    const match =
+      plans.find((p) => p.name === request.requestedPlan) ?? plans[0];
     setPlanId(match.id);
     setWarehouseLimit(`${match.maxWarehouses} warehouses`);
     setSeats(`${match.maxUserSeats} seats`);
@@ -55,7 +78,11 @@ export function ProvisionPage() {
   if (error || !request) {
     return (
       <Page>
-        <ErrorState onRetry={reload} title="Couldn't load this request" description={describeApiError(error)} />
+        <ErrorState
+          onRetry={reload}
+          title="Couldn't load this request"
+          description={describeApiError(error)}
+        />
       </Page>
     );
   }
@@ -70,12 +97,14 @@ export function ProvisionPage() {
         result = await platformApi.approveRequest(request!.id);
         setProvisioned(result);
         setStep(3);
-        toast.success("Tenant provisioned", `${request!.companyName} ke liye tenant record ban gaya.`);
+        toast.success(
+          "Tenant provisioned",
+          `${request!.companyName} ke liye tenant record ban gaya.`,
+        );
       } else {
         setStep(3);
       }
     } catch {
-      // toast already shown by platformApi
     } finally {
       setBusy(false);
     }
@@ -91,7 +120,12 @@ export function ProvisionPage() {
   return (
     <Page>
       <PageHeader
-        breadcrumb={["WarehouseOS", "Platform Console", "Approvals", "Provision"]}
+        breadcrumb={[
+          "WarehouseOS",
+          "Platform Console",
+          "Approvals",
+          "Provision",
+        ]}
         title="Approve & Provision"
         subtitle={`${request.companyName} · Step ${Math.min(step + 1, 4)} of 4`}
       />
@@ -101,7 +135,9 @@ export function ProvisionPage() {
           <Stepper steps={STEPS} current={step} />
         </div>
 
-        <h2 className="text-center text-[20px] font-bold text-ink-900">Provisioning {request.companyName}</h2>
+        <h2 className="text-center text-[20px] font-bold text-ink-900">
+          Provisioning {request.companyName}
+        </h2>
         <p className="mt-1 mb-5 text-center text-[12px] text-ink-500">
           {step < 3
             ? "Confirm plan and limits, then generate the tenant record."
@@ -110,7 +146,8 @@ export function ProvisionPage() {
 
         {plans.length === 0 && (
           <p className="mb-3 rounded-lg bg-warning-tint px-3 py-2 text-[11px] text-warning">
-            No plans configured yet. Backend me /platform/plans par plans add karein.
+            No plans configured yet. Backend me /platform/plans par plans add
+            karein.
           </p>
         )}
 
@@ -131,7 +168,9 @@ export function ProvisionPage() {
                   setStep(1);
                 }}
                 className={`mt-1 h-9 w-full rounded-lg border bg-white px-3 text-[12px] outline-none ${
-                  step >= 2 ? "border-primary ring-1 ring-primary/30" : "border-line"
+                  step >= 2
+                    ? "border-primary ring-1 ring-primary/30"
+                    : "border-line"
                 } focus:border-primary`}
               >
                 {plans.map((plan) => (
@@ -179,12 +218,15 @@ export function ProvisionPage() {
             </label>
             {selectedPlan && (
               <div className="rounded-lg border border-line bg-[#fafafa] px-3 py-2">
-                <p className="text-[10px] font-semibold tracking-wide text-ink-muted uppercase">Selected plan</p>
+                <p className="text-[10px] font-semibold tracking-wide text-ink-muted uppercase">
+                  Selected plan
+                </p>
                 <p className="mt-0.5 text-[12px] font-semibold text-ink-900">
                   {selectedPlan.name} · ${selectedPlan.monthlyPrice}/mo
                 </p>
                 <p className="text-[11px] text-ink-500">
-                  {selectedPlan.maxWarehouses} warehouses · {selectedPlan.maxUserSeats} seats
+                  {selectedPlan.maxWarehouses} warehouses ·{" "}
+                  {selectedPlan.maxUserSeats} seats
                 </p>
               </div>
             )}
@@ -193,14 +235,20 @@ export function ProvisionPage() {
 
         {provisioned && (
           <div className="mt-4 rounded-xl border border-primary/20 bg-primary-tint px-6 py-5 text-center">
-            <p className="text-[11px] font-medium text-ink-500">Generated Tenant ID</p>
+            <p className="text-[11px] font-medium text-ink-500">
+              Generated Tenant ID
+            </p>
             <button
               onClick={copyId}
               className="mt-1 inline-flex items-center gap-2 font-mono text-[20px] font-bold text-primary hover:underline"
               title="Copy tenant ID"
             >
               {provisioned.tenantCode}
-              {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              {copied ? (
+                <Check className="size-4" />
+              ) : (
+                <Copy className="size-4" />
+              )}
             </button>
             <p className="mt-1 text-[11px] text-ink-500">
               This ID scopes all data, users and billing for this organization
@@ -210,20 +258,35 @@ export function ProvisionPage() {
 
         {step >= 3 && (
           <div className="mt-4 rounded-xl border border-success/20 bg-success-tint px-6 py-5 text-center">
-            <p className="text-[13px] font-bold text-success">Invite ready for {request.email}</p>
+            <p className="text-[13px] font-bold text-success">
+              Invite ready for {request.email}
+            </p>
             <p className="mt-1 text-[11px] text-ink-500">
-              Frontend handoff: <code className="font-mono">/invite/&lt;token&gt;</code> → onboarding.
+              Frontend handoff:{" "}
+              <code className="font-mono">/invite/&lt;token&gt;</code> →
+              onboarding.
             </p>
           </div>
         )}
 
         <div className="mt-5 flex items-center justify-between">
-          <Button variant="secondary" onClick={() => navigate(-1)} disabled={busy}>
+          <Button
+            variant="secondary"
+            onClick={() => navigate(-1)}
+            disabled={busy}
+          >
             Back
           </Button>
           {step < 3 ? (
-            <Button onClick={() => (step < 2 ? setStep(step + 1) : generateAndSend())} disabled={busy || !plans.length}>
-              {busy ? "Provisioning…" : step < 2 ? "Continue" : "Generate & Send Invite"}
+            <Button
+              onClick={() => (step < 2 ? setStep(step + 1) : generateAndSend())}
+              disabled={busy || !plans.length}
+            >
+              {busy
+                ? "Provisioning…"
+                : step < 2
+                  ? "Continue"
+                  : "Generate & Send Invite"}
               <ArrowRight className="size-3.5" />
             </Button>
           ) : (

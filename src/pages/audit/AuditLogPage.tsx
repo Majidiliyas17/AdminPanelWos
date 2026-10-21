@@ -1,7 +1,24 @@
 import { useMemo } from "react";
-import { BadgeCheck, Building2, Clock, Download, Flag, ShieldCheck, UserCog, Users, Package, FileText } from "lucide-react";
+import {
+  BadgeCheck,
+  Building2,
+  Clock,
+  Download,
+  Flag,
+  ShieldCheck,
+  UserCog,
+  Users,
+  Package,
+  FileText,
+} from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
-import { DeltaPill, ErrorState, PanelCard, SkeletonTable, StatCard } from "@/components/ui";
+import {
+  DeltaPill,
+  ErrorState,
+  PanelCard,
+  SkeletonTable,
+  StatCard,
+} from "@/components/ui";
 import { platformApi, computeAuditKpis } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
 import { describeApiError } from "@/lib/api";
@@ -9,21 +26,57 @@ import { formatDateTime } from "@/lib/time";
 import type { AuditEvent } from "@/lib/platformTypes";
 import { cn } from "@/lib/cn";
 
-const actionIcons: Array<{ match: (action: string, title: string) => boolean; icon: typeof BadgeCheck; tone: string }> = [
-  { match: (a, t) => a.includes("Approved") || t.includes("Approved"), icon: BadgeCheck, tone: "bg-primary-tint text-primary" },
-  { match: (a, t) => a.includes("Provision") || t.includes("Provision"), icon: Building2, tone: "bg-primary-tint text-brand-violet" },
-  { match: (a) => a.includes("Impersonat"), icon: UserCog, tone: "bg-info-tint text-info" },
-  { match: (a, t) => a.includes("Plan") || t.includes("Plan"), icon: FileText, tone: "bg-info-tint text-info" },
-  { match: (a, t) => a.includes("Suspend") || a.includes("React") || t.includes("Suspend"), icon: Package, tone: "bg-warning-tint text-warning" },
-  { match: (a, t) => a.includes("FeatureFlag") || t.includes("Feature Flag"), icon: Flag, tone: "bg-violet-tint text-brand-violet" },
+const actionIcons: Array<{
+  match: (action: string, title: string) => boolean;
+  icon: typeof BadgeCheck;
+  tone: string;
+}> = [
+  {
+    match: (a, t) => a.includes("Approved") || t.includes("Approved"),
+    icon: BadgeCheck,
+    tone: "bg-primary-tint text-primary",
+  },
+  {
+    match: (a, t) => a.includes("Provision") || t.includes("Provision"),
+    icon: Building2,
+    tone: "bg-primary-tint text-brand-violet",
+  },
+  {
+    match: (a) => a.includes("Impersonat"),
+    icon: UserCog,
+    tone: "bg-info-tint text-info",
+  },
+  {
+    match: (a, t) => a.includes("Plan") || t.includes("Plan"),
+    icon: FileText,
+    tone: "bg-info-tint text-info",
+  },
+  {
+    match: (a, t) =>
+      a.includes("Suspend") || a.includes("React") || t.includes("Suspend"),
+    icon: Package,
+    tone: "bg-warning-tint text-warning",
+  },
+  {
+    match: (a, t) => a.includes("FeatureFlag") || t.includes("Feature Flag"),
+    icon: Flag,
+    tone: "bg-violet-tint text-brand-violet",
+  },
   { match: () => true, icon: ShieldCheck, tone: "bg-[#f3f4f6] text-ink-500" },
 ];
 
 function iconFor(event: AuditEvent) {
-  const entry = actionIcons.find((item) => item.match(event.action, event.title)) ?? actionIcons[actionIcons.length - 1];
+  const entry =
+    actionIcons.find((item) => item.match(event.action, event.title)) ??
+    actionIcons[actionIcons.length - 1];
   const Icon = entry.icon;
   return (
-    <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg", entry.tone)}>
+    <span
+      className={cn(
+        "grid size-8 shrink-0 place-items-center rounded-lg",
+        entry.tone,
+      )}
+    >
       <Icon className="size-4" />
     </span>
   );
@@ -32,7 +85,10 @@ function iconFor(event: AuditEvent) {
 function exportCsv(events: AuditEvent[]) {
   const header = "Title,Action,Detail,Timestamp\n";
   const body = events
-    .map((e) => `"${e.title.replace(/"/g, '""')}","${e.action}","${e.detail.replace(/"/g, '""')}","${e.timestampUtc}"`)
+    .map(
+      (e) =>
+        `"${e.title.replace(/"/g, '""')}","${e.action}","${e.detail.replace(/"/g, '""')}","${e.timestampUtc}"`,
+    )
     .join("\n");
   const blob = new Blob([header + body], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -44,11 +100,16 @@ function exportCsv(events: AuditEvent[]) {
 }
 
 export function AuditLogPage() {
-  const { data, loading, error, reload } = useAsync(() => platformApi.listAudit(), []);
+  const { data, loading, error, reload } = useAsync(
+    () => platformApi.listAudit(),
+    [],
+  );
   const events = data?.items ?? [];
   const kpis = useMemo(() => computeAuditKpis(events), [events]);
   const impersonations = useMemo(
-    () => events.filter((e) => e.action.toLowerCase().includes("impersonat")).length,
+    () =>
+      events.filter((e) => e.action.toLowerCase().includes("impersonat"))
+        .length,
     [events],
   );
 
@@ -75,7 +136,9 @@ export function AuditLogPage() {
           label="Events Today"
           value={kpis.last24h}
           icon={<ShieldCheck className="size-4" />}
-          delta={<DeltaPill direction="up">{kpis.total} total logged</DeltaPill>}
+          delta={
+            <DeltaPill direction="up">{kpis.total} total logged</DeltaPill>
+          }
         />
         <StatCard
           label="Unique Actions"
@@ -105,22 +168,39 @@ export function AuditLogPage() {
         />
       </div>
 
-      <PanelCard className="mt-4" title="Platform Audit Log" icon={<ShieldCheck className="size-3.5" />}>
+      <PanelCard
+        className="mt-4"
+        title="Platform Audit Log"
+        icon={<ShieldCheck className="size-3.5" />}
+      >
         {loading && <SkeletonTable rows={6} cols={3} />}
-        {error && <ErrorState onRetry={reload} description={describeApiError(error)} />}
+        {error && (
+          <ErrorState onRetry={reload} description={describeApiError(error)} />
+        )}
         {!loading && !error && events.length === 0 && (
-          <p className="py-6 text-center text-[12px] text-ink-500">No audit events yet. Platform actions will appear here.</p>
+          <p className="py-6 text-center text-[12px] text-ink-500">
+            No audit events yet. Platform actions will appear here.
+          </p>
         )}
         {!loading &&
           !error &&
           events.map((event) => (
-            <div key={event.id} className="flex items-start gap-3 border-b border-[#f3f4f6] py-3 last:border-0">
+            <div
+              key={event.id}
+              className="flex items-start gap-3 border-b border-[#f3f4f6] py-3 last:border-0"
+            >
               {iconFor(event)}
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-bold text-ink-900">{event.title}</p>
-                <p className="mt-0.5 text-[11px] text-ink-500">{event.detail}</p>
+                <p className="text-[13px] font-bold text-ink-900">
+                  {event.title}
+                </p>
+                <p className="mt-0.5 text-[11px] text-ink-500">
+                  {event.detail}
+                </p>
               </div>
-              <span className="shrink-0 font-mono text-[11px] text-ink-500">{formatDateTime(event.timestampUtc)}</span>
+              <span className="shrink-0 font-mono text-[11px] text-ink-500">
+                {formatDateTime(event.timestampUtc)}
+              </span>
             </div>
           ))}
       </PanelCard>

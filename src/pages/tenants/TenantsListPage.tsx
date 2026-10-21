@@ -34,14 +34,20 @@ const TABS = ["All", "Active", "Trial", "Suspended"];
 export function TenantsListPage() {
   const [tab, setTab] = useState("All");
   const [query, setQuery] = useState("");
-  const { data, loading, error, reload } = useAsync(() => platformApi.listTenants(), []);
+  const { data, loading, error, reload } = useAsync(
+    () => platformApi.listTenants(),
+    [],
+  );
 
   const rows = useMemo(() => {
     let list = data?.items ?? [];
     if (tab !== "All") list = list.filter((t) => t.status === tab);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
-      list = list.filter((t) => t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q));
+      list = list.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q),
+      );
     }
     return list;
   }, [data, tab, query]);
@@ -49,7 +55,9 @@ export function TenantsListPage() {
   const kpis = useMemo(() => computeTenantKpis(data?.items ?? []), [data]);
 
   const countries = useMemo(() => {
-    const set = new Set((data?.items ?? []).map((t) => t.country).filter(Boolean));
+    const set = new Set(
+      (data?.items ?? []).map((t) => t.country).filter(Boolean),
+    );
     return set.size;
   }, [data]);
 
@@ -58,19 +66,36 @@ export function TenantsListPage() {
       key: "name",
       header: "Tenant",
       render: (row) => (
-        <Link to={`/tenants/${row.id}`} className="text-ink-900 hover:text-primary hover:underline">
+        <Link
+          to={`/tenants/${row.id}`}
+          className="text-ink-900 hover:text-primary hover:underline"
+        >
           {row.name}
         </Link>
       ),
     },
     { key: "code", header: "Tenant ID", mono: true },
     { key: "plan", header: "Plan" },
-    { key: "warehouses", header: "Warehouses", render: (row) => row.warehouses ?? "—" },
-    { key: "since", header: "Since", mono: true, render: (row) => row.since ?? "—" },
+    {
+      key: "warehouses",
+      header: "Warehouses",
+      render: (row) => row.warehouses ?? "—",
+    },
+    {
+      key: "since",
+      header: "Since",
+      mono: true,
+      render: (row) => row.since ?? "—",
+    },
     {
       key: "status",
       header: "Status",
-      render: (row) => <StatusChip tone={statusTone[row.status] ?? "neutral"} label={row.status} />,
+      render: (row) => (
+        <StatusChip
+          tone={statusTone[row.status] ?? "neutral"}
+          label={row.status}
+        />
+      ),
     },
   ];
 
@@ -94,7 +119,11 @@ export function TenantsListPage() {
           label="Total Tenants"
           value={kpis.total}
           icon={<Building2 className="size-4" />}
-          delta={<DeltaPill direction="up">{countries ? `across ${countries} countries` : "no tenants yet"}</DeltaPill>}
+          delta={
+            <DeltaPill direction="up">
+              {countries ? `across ${countries} countries` : "no tenants yet"}
+            </DeltaPill>
+          }
         />
         <StatCard
           label="Active"
@@ -102,7 +131,9 @@ export function TenantsListPage() {
           icon={<CheckCircle2 className="size-4" />}
           delta={
             <DeltaPill direction="up">
-              {kpis.total ? `${Math.round((kpis.active / kpis.total) * 100)}% of total` : "—"}
+              {kpis.total
+                ? `${Math.round((kpis.active / kpis.total) * 100)}% of total`
+                : "—"}
             </DeltaPill>
           }
         />
@@ -110,7 +141,11 @@ export function TenantsListPage() {
           label="Trial"
           value={kpis.trial}
           icon={<Clock className="size-4" />}
-          delta={<DeltaPill direction="up">{kpis.trial ? "converting" : "none in trial"}</DeltaPill>}
+          delta={
+            <DeltaPill direction="up">
+              {kpis.trial ? "converting" : "none in trial"}
+            </DeltaPill>
+          }
         />
         <StatCard
           label="Suspended"
@@ -148,13 +183,25 @@ export function TenantsListPage() {
         </div>
         <div className="p-4 pt-2">
           {loading && <SkeletonTable rows={6} cols={6} />}
-          {error && <ErrorState onRetry={reload} description={describeApiError(error)} />}
+          {error && (
+            <ErrorState
+              onRetry={reload}
+              description={describeApiError(error)}
+            />
+          )}
           {!loading && !error && rows.length === 0 && (
-            <EmptyState title="No tenants match" description="Try another status tab or clear the search." />
+            <EmptyState
+              title="No tenants match"
+              description="Try another status tab or clear the search."
+            />
           )}
           {!loading && !error && rows.length > 0 && (
             <>
-              <DataTable columns={columns} rows={rows} rowKey={(row) => row.id} />
+              <DataTable
+                columns={columns}
+                rows={rows}
+                rowKey={(row) => row.id}
+              />
               <PaginationLine total={rows.length} pageSize={10} />
             </>
           )}

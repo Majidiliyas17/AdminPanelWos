@@ -25,7 +25,6 @@ export function AdminLoginPage() {
       await login(email, password, totpCode || undefined);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      // Asli API error dikhao — chup-chaap mock login nahi hota
       const message = describeApiError(err);
       setError(message);
       toast.error("Sign-in failed", message, "login");
@@ -49,8 +48,12 @@ export function AdminLoginPage() {
           </span>
         </div>
 
-        <h1 className="text-center text-[26px] font-bold text-ink-900">Super Admin Sign In</h1>
-        <p className="mt-1 mb-6 text-center text-[13px] text-ink-500">Restricted access · platform staff only</p>
+        <h1 className="text-center text-[26px] font-bold text-ink-900">
+          Super Admin Sign In
+        </h1>
+        <p className="mt-1 mb-6 text-center text-[13px] text-ink-500">
+          Restricted access · platform staff only
+        </p>
 
         <label className="mb-3 block text-[11px] font-semibold text-[#374151]">
           Work Email
@@ -85,7 +88,11 @@ export function AdminLoginPage() {
           />
         </label>
 
-        {error && <p className="mb-3 rounded-lg bg-danger-tint px-3 py-2 text-[11px] text-danger">{error}</p>}
+        {error && (
+          <p className="mb-3 rounded-lg bg-danger-tint px-3 py-2 text-[11px] text-danger">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
@@ -95,7 +102,9 @@ export function AdminLoginPage() {
           {busy ? "Signing in…" : "Sign In to Console"}
         </button>
 
-        <p className="mt-4 text-center text-[11px] text-ink-500">Every sign-in is logged and reviewed for security.</p>
+        <p className="mt-4 text-center text-[11px] text-ink-500">
+          Every sign-in is logged and reviewed for security.
+        </p>
       </form>
 
       <footer className="fixed right-0 bottom-0 left-0 flex h-7 items-center justify-between border-t border-line bg-white px-4 text-[10px] text-ink-500">

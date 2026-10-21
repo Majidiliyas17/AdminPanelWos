@@ -1,16 +1,3 @@
-// ====================================================================
-// toast.tsx — app-wide toast host (koi external dependency nahi)
-// ====================================================================
-// Simple language mein: jab bhi koi API call fail hoti hai, console
-// chup-chaap mock data nahi dikhata — yahan toast aata hai ki kis
-// module ki request fail hui aur kyun (network down, 401, 404, 5xx).
-//
-// Dedupe: ek hi key par 4s ke andar dobara toast nahi banta, taake
-// rapid calls me spam na ho. `toast.api()` standard entry point hai —
-// toast dikhata hai aur `ApiError` throw karta hai taake caller ka
-// ErrorState/Retry bhi chal sake.
-// ====================================================================
-
 import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import { toApiError, type ApiError } from "@/lib/api";
@@ -38,7 +25,12 @@ function commit(next: ToastItem[]) {
   listeners.forEach((listener) => listener());
 }
 
-function push(tone: ToastTone, title: string, description?: string, key?: string) {
+function push(
+  tone: ToastTone,
+  title: string,
+  description?: string,
+  key?: string,
+) {
   const dedupeKey = key ?? `${title}|${description ?? ""}`;
   const now = Date.now();
   const previous = lastShown.get(dedupeKey);
@@ -56,25 +48,46 @@ function push(tone: ToastTone, title: string, description?: string, key?: string
 }
 
 export const toast = {
-  success: (title: string, description?: string) => push("success", title, description),
-  info: (title: string, description?: string) => push("info", title, description),
-  warning: (title: string, description?: string, key?: string) => push("warning", title, description, key),
-  error: (title: string, description?: string, key?: string) => push("danger", title, description, key),
+  success: (title: string, description?: string) =>
+    push("success", title, description),
+  info: (title: string, description?: string) =>
+    push("info", title, description),
+  warning: (title: string, description?: string, key?: string) =>
+    push("warning", title, description, key),
+  error: (title: string, description?: string, key?: string) =>
+    push("danger", title, description, key),
 
-  // Standard API-failure entry point: toast dikhao aur error return karo.
-  // Caller `throw toast.api(...)` karega taake uska ErrorState/Retry bhi chal sake.
-  // Usage: `catch (error) { throw toast.api("Tenants", error) }`
   api(scope: string, error: unknown): ApiError {
     const apiError = toApiError(error);
-    push("danger", `${scope} — API request failed`, apiError.message, `api:${scope}`);
+    push(
+      "danger",
+      `${scope} — API request failed`,
+      apiError.message,
+      `api:${scope}`,
+    );
     return apiError;
   },
 };
 
-const TONE_STYLES: Record<ToastTone, { icon: typeof AlertTriangle; iconBg: string; accent: string }> = {
-  danger: { icon: AlertTriangle, iconBg: "bg-danger-tint text-danger", accent: "bg-danger" },
-  warning: { icon: AlertTriangle, iconBg: "bg-warning-tint text-warning", accent: "bg-warning" },
-  success: { icon: CheckCircle2, iconBg: "bg-success-tint text-success", accent: "bg-success" },
+const TONE_STYLES: Record<
+  ToastTone,
+  { icon: typeof AlertTriangle; iconBg: string; accent: string }
+> = {
+  danger: {
+    icon: AlertTriangle,
+    iconBg: "bg-danger-tint text-danger",
+    accent: "bg-danger",
+  },
+  warning: {
+    icon: AlertTriangle,
+    iconBg: "bg-warning-tint text-warning",
+    accent: "bg-warning",
+  },
+  success: {
+    icon: CheckCircle2,
+    iconBg: "bg-success-tint text-success",
+    accent: "bg-success",
+  },
   info: { icon: Info, iconBg: "bg-info-tint text-info", accent: "bg-info" },
 };
 
@@ -92,7 +105,10 @@ export function Toaster() {
   if (items.length === 0) return null;
 
   return (
-    <div aria-live="polite" className="pointer-events-none fixed right-4 bottom-10 z-[100] flex w-[340px] flex-col gap-2">
+    <div
+      aria-live="polite"
+      className="pointer-events-none fixed right-4 bottom-10 z-[100] flex w-[340px] flex-col gap-2"
+    >
       {items.map((item) => {
         const style = TONE_STYLES[item.tone];
         const Icon = style.icon;
@@ -105,18 +121,29 @@ export function Toaster() {
             )}
           >
             <div className="flex items-start gap-3 p-3">
-              <span className={cn("mt-0.5 grid size-6 shrink-0 place-items-center rounded-md", style.iconBg)}>
+              <span
+                className={cn(
+                  "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md",
+                  style.iconBg,
+                )}
+              >
                 <Icon className="size-3.5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-semibold text-ink-900">{item.title}</p>
+                <p className="text-[12px] font-semibold text-ink-900">
+                  {item.title}
+                </p>
                 {item.description && (
-                  <p className="mt-0.5 text-[11px] leading-relaxed text-ink-500">{item.description}</p>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-ink-500">
+                    {item.description}
+                  </p>
                 )}
               </div>
               <button
                 aria-label="Dismiss"
-                onClick={() => commit(items.filter((row) => row.id !== item.id))}
+                onClick={() =>
+                  commit(items.filter((row) => row.id !== item.id))
+                }
                 className="grid size-5 shrink-0 place-items-center rounded text-ink-muted hover:bg-[#f3f4f6] hover:text-ink-500"
               >
                 <X className="size-3" />

@@ -30,7 +30,10 @@ export function AppRoutes() {
         <Route path="/dashboard" element={<PlatformDashboardPage />} />
         <Route path="/approvals" element={<ApprovalQueuePage />} />
         <Route path="/approvals/:requestId" element={<RequestReviewPage />} />
-        <Route path="/approvals/:requestId/provision" element={<ProvisionPage />} />
+        <Route
+          path="/approvals/:requestId/provision"
+          element={<ProvisionPage />}
+        />
         <Route path="/tenants" element={<TenantsListPage />} />
         <Route path="/tenants/:tenantId" element={<TenantDetailsPage />} />
         <Route path="/billing" element={<BillingPlansPage />} />
@@ -42,7 +45,10 @@ export function AppRoutes() {
           path="*"
           element={
             <Page>
-              <EmptyState title="Page not found" description="Use the console navigation on the left." />
+              <EmptyState
+                title="Page not found"
+                description="Use the console navigation on the left."
+              />
             </Page>
           }
         />

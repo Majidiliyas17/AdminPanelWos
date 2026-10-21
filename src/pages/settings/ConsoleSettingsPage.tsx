@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { KeyRound, Lock, Save, ShieldCheck, User } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
-import { Button, Field, PanelCard, StatusChip, inputClass } from "@/components/ui";
+import {
+  Button,
+  Field,
+  PanelCard,
+  StatusChip,
+  inputClass,
+} from "@/components/ui";
 import { useAdminAuth } from "@/lib/auth";
 import { toast } from "@/lib/toast";
 
@@ -13,8 +19,6 @@ export function ConsoleSettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [sessionMinutes, setSessionMinutes] = useState("60");
 
-  // Backend me platform staff ka profile/password update endpoint abhi
-  // nahi hai — isliye fake "Saved" nahi dikhate, seedha bolte hain.
   function saveProfile() {
     toast.warning(
       "Profile update API not available",
@@ -42,14 +46,25 @@ export function ConsoleSettingsPage() {
       <div className="grid grid-cols-2 items-start gap-4">
         <PanelCard title="Profile" icon={<User className="size-3.5" />}>
           <Field label="Display name">
-            <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={inputClass}
+            />
           </Field>
           <Field label="Work email" className="mt-3">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={inputClass}
+            />
           </Field>
           <Field label="Role" className="mt-3">
             <div className="mt-1 flex h-9 items-center gap-2 rounded-lg border border-line bg-[#f9fafb] px-3">
-              <span className="text-[12px] font-semibold text-ink-900">{user?.role || "SuperAdmin"}</span>
+              <span className="text-[12px] font-semibold text-ink-900">
+                {user?.role || "SuperAdmin"}
+              </span>
               <StatusChip tone="info" label="Read-only" />
             </div>
           </Field>
@@ -64,7 +79,9 @@ export function ConsoleSettingsPage() {
         <div className="space-y-4">
           <PanelCard title="Security" icon={<Lock className="size-3.5" />}>
             <div className="mb-3 flex items-center justify-between rounded-lg border border-line bg-[#f9fafb] px-3 py-2">
-              <span className="text-[12px] text-ink-500">Two-factor authentication</span>
+              <span className="text-[12px] text-ink-500">
+                Two-factor authentication
+              </span>
               <StatusChip tone="success" label="Enabled" />
             </div>
             <Field label="Current password">
@@ -84,16 +101,26 @@ export function ConsoleSettingsPage() {
               />
             </Field>
             <div className="mt-4 flex items-center gap-2">
-              <Button onClick={saveSecurity} disabled={currentPassword.length < 8 || newPassword.length < 12}>
+              <Button
+                onClick={saveSecurity}
+                disabled={currentPassword.length < 8 || newPassword.length < 12}
+              >
                 <KeyRound className="size-3.5" />
                 Update Password
               </Button>
             </div>
           </PanelCard>
 
-          <PanelCard title="Session Policy" icon={<ShieldCheck className="size-3.5" />}>
+          <PanelCard
+            title="Session Policy"
+            icon={<ShieldCheck className="size-3.5" />}
+          >
             <Field label="Idle timeout (minutes)">
-              <select value={sessionMinutes} onChange={(e) => setSessionMinutes(e.target.value)} className={inputClass}>
+              <select
+                value={sessionMinutes}
+                onChange={(e) => setSessionMinutes(e.target.value)}
+                className={inputClass}
+              >
                 {["15", "30", "60", "120", "240"].map((value) => (
                   <option key={value} value={value}>
                     {value} minutes
@@ -102,7 +129,8 @@ export function ConsoleSettingsPage() {
               </select>
             </Field>
             <p className="mt-3 text-[11px] text-ink-500">
-              Super Admin sessions expire after the idle timeout. Impersonation tokens are always capped at 15 minutes.
+              Super Admin sessions expire after the idle timeout. Impersonation
+              tokens are always capped at 15 minutes.
             </p>
           </PanelCard>
         </div>

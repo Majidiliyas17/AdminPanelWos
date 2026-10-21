@@ -26,12 +26,28 @@ const nav = [
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
-const footerMap: Array<{ match: (path: string) => boolean; label: string; page: number }> = [
+const footerMap: Array<{
+  match: (path: string) => boolean;
+  label: string;
+  page: number;
+}> = [
   { match: (p) => p === "/dashboard", label: "Dashboard", page: 144 },
-  { match: (p) => p.startsWith("/approvals") && p.includes("/provision"), label: "Approve & Provision Tenant", page: 147 },
-  { match: (p) => p.startsWith("/approvals/"), label: "Request Details", page: 146 },
+  {
+    match: (p) => p.startsWith("/approvals") && p.includes("/provision"),
+    label: "Approve & Provision Tenant",
+    page: 147,
+  },
+  {
+    match: (p) => p.startsWith("/approvals/"),
+    label: "Request Details",
+    page: 146,
+  },
   { match: (p) => p === "/approvals", label: "Approval Queue", page: 145 },
-  { match: (p) => p.startsWith("/tenants/"), label: "Tenant Details", page: 149 },
+  {
+    match: (p) => p.startsWith("/tenants/"),
+    label: "Tenant Details",
+    page: 149,
+  },
   { match: (p) => p === "/tenants", label: "Tenant List", page: 148 },
   { match: (p) => p === "/billing", label: "Billing & Plans", page: 151 },
   { match: (p) => p === "/feature-flags", label: "Feature Flags", page: 152 },
@@ -59,14 +75,20 @@ export function Sidebar() {
           <span className="block text-[13px] font-bold text-white">
             Warehouse<span className="text-brand-violet">OS</span>
           </span>
-          <span className="block text-[8px] font-semibold tracking-[0.18em] text-ink-muted">PLATFORM CONSOLE</span>
+          <span className="block text-[8px] font-semibold tracking-[0.18em] text-ink-muted">
+            PLATFORM CONSOLE
+          </span>
         </span>
       </div>
 
       <button className="mx-3 mb-3 flex items-center justify-between rounded-lg border border-[#322c58] bg-sidebar-card px-3 py-2 text-left">
         <span>
-          <span className="block text-[11px] font-semibold text-white">Super Admin</span>
-          <span className="block text-[9px] text-ink-muted">All Tenants · Global</span>
+          <span className="block text-[11px] font-semibold text-white">
+            Super Admin
+          </span>
+          <span className="block text-[9px] text-ink-muted">
+            All Tenants · Global
+          </span>
         </span>
         <ChevronDown className="size-3.5 text-ink-muted" />
       </button>
@@ -97,7 +119,9 @@ export function Sidebar() {
             {initials}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[11px] font-semibold text-white">{user?.name || "Riya Kapoor"}</span>
+            <span className="block truncate text-[11px] font-semibold text-white">
+              {user?.name || "Riya Kapoor"}
+            </span>
             <span className="block text-[9px] text-ink-muted">Super Admin</span>
           </span>
           <button
@@ -122,7 +146,9 @@ export function Topbar() {
           className="w-full bg-transparent text-[11px] text-ink-900 outline-none placeholder:text-ink-muted"
           placeholder="Search tenants, requests, invoices…"
         />
-        <kbd className="rounded border border-line bg-[#f9fafb] px-1 py-0.5 font-mono text-[9px] text-ink-muted">ctrl K</kbd>
+        <kbd className="rounded border border-line bg-[#f9fafb] px-1 py-0.5 font-mono text-[9px] text-ink-muted">
+          ctrl K
+        </kbd>
       </label>
 
       <div className="ml-auto flex items-center gap-2">
@@ -132,14 +158,22 @@ export function Topbar() {
             className="relative grid size-7 place-items-center rounded-lg border border-line bg-white text-[12px] text-ink-500 hover:bg-[#f9fafb]"
           >
             {glyph}
-            {i === 2 && <span className="absolute top-1 right-1 size-1.5 rounded-full bg-danger" />}
+            {i === 2 && (
+              <span className="absolute top-1 right-1 size-1.5 rounded-full bg-danger" />
+            )}
           </button>
         ))}
         <button className="flex items-center gap-2 rounded-lg border border-line bg-white px-2 py-1">
-          <span className="grid size-6 place-items-center rounded-full bg-violet-tint text-[10px] font-bold text-brand-violet">RK</span>
+          <span className="grid size-6 place-items-center rounded-full bg-violet-tint text-[10px] font-bold text-brand-violet">
+            RK
+          </span>
           <span className="text-left">
-            <span className="block text-[12px] leading-tight font-semibold text-ink-900">Riya Kapoor</span>
-            <span className="block text-[9px] leading-tight text-ink-500">Super Admin</span>
+            <span className="block text-[12px] leading-tight font-semibold text-ink-900">
+              Riya Kapoor
+            </span>
+            <span className="block text-[9px] leading-tight text-ink-500">
+              Super Admin
+            </span>
           </span>
           <ChevronDown className="size-3 text-ink-muted" />
         </button>
@@ -193,14 +227,24 @@ export function PageHeader({
           {breadcrumb.map((crumb, i) => (
             <span key={crumb} className="flex items-center gap-1.5">
               {i > 0 && <span>·</span>}
-              <span className={i === 0 ? "font-semibold text-ink-900" : undefined}>{crumb}</span>
+              <span
+                className={i === 0 ? "font-semibold text-ink-900" : undefined}
+              >
+                {crumb}
+              </span>
             </span>
           ))}
         </nav>
-        <h1 className="text-[24px] leading-tight font-bold text-ink-900">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-[12px] text-ink-500">{subtitle}</p>}
+        <h1 className="text-[24px] leading-tight font-bold text-ink-900">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="mt-0.5 text-[12px] text-ink-500">{subtitle}</p>
+        )}
       </div>
-      {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
+      {action && (
+        <div className="flex shrink-0 items-center gap-2">{action}</div>
+      )}
     </div>
   );
 }

@@ -47,9 +47,6 @@ adminApi.interceptors.request.use((config) => {
   return config;
 });
 
-// Backend har JSON response ek envelope me bhejta hai —
-// { success, data, error, meta } (Web/Infrastructure/ResponseEnvelopeFilter.cs).
-// Yahan ek hi jagah unwrap kar dete hain taake har caller seedha payload dekhe.
 interface EnvelopedBody {
   success: boolean;
   data?: unknown;
@@ -66,7 +63,8 @@ function unwrapEnvelope(response: AxiosResponse): AxiosResponse {
     "data" in body
   ) {
     response.data = body.data;
-    if (body.meta) (response as AxiosResponse & { meta?: unknown }).meta = body.meta;
+    if (body.meta)
+      (response as AxiosResponse & { meta?: unknown }).meta = body.meta;
   }
   return response;
 }
@@ -79,15 +77,14 @@ adminApi.interceptors.response.use(
   },
 );
 
-// ------------------------------------------------------------------
-// API errors — user ko dikhne wala asli karan (chup-chaap mock nahi)
-// ------------------------------------------------------------------
-
 export class ApiError extends Error {
   readonly status?: number;
   readonly endpoint?: string;
 
-  constructor(message: string, options: { status?: number; endpoint?: string; cause?: unknown } = {}) {
+  constructor(
+    message: string,
+    options: { status?: number; endpoint?: string; cause?: unknown } = {},
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = options.status;
@@ -96,13 +93,22 @@ export class ApiError extends Error {
   }
 }
 
-// Envelope { error: { code, message, fieldErrors } } se message nikaalo
 function serverMessage(data: unknown): string | null {
-  if (!data || typeof data !== "object") return typeof data === "string" && data ? data : null;
-  const body = data as { error?: unknown; message?: string; detail?: string; title?: string };
+  if (!data || typeof data !== "object")
+    return typeof data === "string" && data ? data : null;
+  const body = data as {
+    error?: unknown;
+    message?: string;
+    detail?: string;
+    title?: string;
+  };
   if (typeof body.error === "string" && body.error) return body.error;
   if (body.error && typeof body.error === "object") {
-    const nested = body.error as { message?: string; title?: string; description?: string };
+    const nested = body.error as {
+      message?: string;
+      title?: string;
+      description?: string;
+    };
     const text = nested.message ?? nested.description ?? nested.title;
     if (text) return text;
   }
@@ -121,11 +127,16 @@ export function describeApiError(error: unknown): string {
     if (!error.response) {
       return "Backend unreachable — API server chal nahi raha (localhost:5234). Server check karein.";
     }
-    if (status === 401) return detail ?? "Session expired — please sign in again.";
-    if (status === 403) return detail ?? "You don't have permission for this data (SuperAdmin only).";
+    if (status === 401)
+      return detail ?? "Session expired — please sign in again.";
+    if (status === 403)
+      return (
+        detail ?? "You don't have permission for this data (SuperAdmin only)."
+      );
     if (status === 404) return `Endpoint not found — ${method} ${url}.`;
     if (status === 429) return "Too many requests — thodi der baad try karein.";
-    if (status && status >= 500) return `Backend error ${status}${detail ? ` — ${detail}` : "."}`;
+    if (status && status >= 500)
+      return `Backend error ${status}${detail ? ` — ${detail}` : "."}`;
     return `Request failed${status ? ` (${status})` : ""}${detail ? ` — ${detail}` : "."}`;
   }
 
@@ -133,7 +144,6 @@ export function describeApiError(error: unknown): string {
   return String(error);
 }
 
-// Koi bhi unknown error → ApiError (toast + page dono ke liye)
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) return error;
   if (axios.isAxiosError(error)) {
@@ -143,7 +153,9 @@ export function toApiError(error: unknown): ApiError {
       cause: error,
     });
   }
-  return new ApiError(error instanceof Error ? error.message : String(error), { cause: error });
+  return new ApiError(error instanceof Error ? error.message : String(error), {
+    cause: error,
+  });
 }
 
 export function isNetworkError(error: unknown): boolean {
@@ -160,7 +172,12 @@ export interface PlatformLoginResponse {
 }
 
 export const platformAuthApi = {
-  login: (email: string, password: string, mfaCode?: string, recoveryCode?: string) =>
+  login: (
+    email: string,
+    password: string,
+    mfaCode?: string,
+    recoveryCode?: string,
+  ) =>
     adminApi
       .post<PlatformLoginResponse>("/platform/auth/login", {
         email,

@@ -12,7 +12,20 @@ export function relativeTime(iso: string | number | Date): string {
   return `${months} month${months === 1 ? "" : "s"} ago`;
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 export function formatDateTime(iso: string | number | Date): string {
   const date = new Date(iso);
@@ -29,5 +42,8 @@ export function formatShortDate(iso: string | number | Date): string {
 }
 
 export function hoursSince(iso: string | number | Date): number {
-  return Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 3600000));
+  return Math.max(
+    1,
+    Math.floor((Date.now() - new Date(iso).getTime()) / 3600000),
+  );
 }

@@ -33,17 +33,25 @@ const TABS = ["All", "Pending", "In Review", "Approved", "Rejected"];
 
 export function ApprovalQueuePage() {
   const [tab, setTab] = useState("All");
-  const { data, loading, error, reload } = useAsync(() => platformApi.listRequests(), [tab]);
+  const { data, loading, error, reload } = useAsync(
+    () => platformApi.listRequests(),
+    [tab],
+  );
   const all = data?.items ?? [];
-  const filtered = useMemo(() => all.filter((r) => tab === "All" || r.status === tab), [all, tab]);
+  const filtered = useMemo(
+    () => all.filter((r) => tab === "All" || r.status === tab),
+    [all, tab],
+  );
   const kpis = useMemo(() => computeApprovalKpis(all), [all]);
 
-  // Avg review time sirf un requests par jo review ho chuki hain
   const avgReviewHours = useMemo(() => {
     const reviewed = all.filter((r) => r.reviewedAtUtc);
     if (!reviewed.length) return null;
     const total = reviewed.reduce(
-      (sum, r) => sum + (new Date(r.reviewedAtUtc as string).getTime() - new Date(r.submittedAtUtc).getTime()),
+      (sum, r) =>
+        sum +
+        (new Date(r.reviewedAtUtc as string).getTime() -
+          new Date(r.submittedAtUtc).getTime()),
       0,
     );
     return total / reviewed.length / 3600000;
@@ -54,7 +62,10 @@ export function ApprovalQueuePage() {
       key: "companyName",
       header: "Company",
       render: (row) => (
-        <Link to={`/approvals/${row.id}`} className="text-ink-900 hover:text-primary hover:underline">
+        <Link
+          to={`/approvals/${row.id}`}
+          className="text-ink-900 hover:text-primary hover:underline"
+        >
           {row.companyName}
         </Link>
       ),
@@ -70,7 +81,12 @@ export function ApprovalQueuePage() {
     {
       key: "status",
       header: "Status",
-      render: (row) => <StatusChip tone={statusTone[row.status] ?? "neutral"} label={row.status} />,
+      render: (row) => (
+        <StatusChip
+          tone={statusTone[row.status] ?? "neutral"}
+          label={row.status}
+        />
+      ),
     },
   ];
 
@@ -123,14 +139,20 @@ export function ApprovalQueuePage() {
             avgReviewHours != null ? (
               <>
                 {avgReviewHours.toFixed(1)}
-                <span className="ml-1 text-[11px] font-medium text-ink-500">hours</span>
+                <span className="ml-1 text-[11px] font-medium text-ink-500">
+                  hours
+                </span>
               </>
             ) : (
               "—"
             )
           }
           icon={<Timer className="size-4" />}
-          delta={<DeltaPill direction="up">{avgReviewHours != null ? "across reviewed" : "no reviews yet"}</DeltaPill>}
+          delta={
+            <DeltaPill direction="up">
+              {avgReviewHours != null ? "across reviewed" : "no reviews yet"}
+            </DeltaPill>
+          }
         />
       </div>
 
@@ -148,13 +170,25 @@ export function ApprovalQueuePage() {
         </div>
         <div className="p-4 pt-2">
           {loading && <SkeletonTable rows={5} cols={5} />}
-          {error && <ErrorState onRetry={reload} description={describeApiError(error)} />}
+          {error && (
+            <ErrorState
+              onRetry={reload}
+              description={describeApiError(error)}
+            />
+          )}
           {!loading && !error && filtered.length === 0 && (
-            <EmptyState title="No requests in this tab" description="New organization requests will show up here." />
+            <EmptyState
+              title="No requests in this tab"
+              description="New organization requests will show up here."
+            />
           )}
           {!loading && !error && filtered.length > 0 && (
             <>
-              <DataTable columns={columns} rows={filtered} rowKey={(row) => row.id} />
+              <DataTable
+                columns={columns}
+                rows={filtered}
+                rowKey={(row) => row.id}
+              />
               <PaginationLine total={all.length} />
             </>
           )}

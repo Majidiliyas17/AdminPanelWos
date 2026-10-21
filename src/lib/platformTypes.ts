@@ -1,10 +1,3 @@
-// Backend DTO shapes (Backend/src/WarehouseOS.Application/Modules/Platform):
-//   TenantRequestSummary / TenantRequestDetails
-//   PlatformTenantSummary / PlatformPlanSummary
-//   FeatureFlagSummary / PlatformUserSummary / PlatformAuditSummary
-//   TenantProvisioned (approve se)
-// Jo fields backend abhi nahi bhejta, wo optional hain — UI unhe "—"
-// dikhata hai, fake number nahi.
 export interface ApprovalRequest {
   id: string;
   companyName: string;
@@ -28,7 +21,6 @@ export interface TenantRow {
   status: string;
   country: string;
   currency: string;
-  // Optional: inhe platform API abhi nahi bhejta (tenant-scoped data hai)
   warehouses?: number;
   since?: string;
   mrr?: number;
@@ -63,8 +55,6 @@ export interface PlatformStaff {
   isActive: boolean;
 }
 
-// POST /platform/users ka response — MFA secret + recovery codes
-// ek hi baar aate hain (baadme DB me sirf protected copy).
 export interface CreatedPlatformStaff {
   id: string;
   email: string;
@@ -111,4 +101,4 @@ export interface TopTenantRow {
   status: string;
 }
 
-export type TenantUsageMetric = never; // abhi backend usage nahi bhejta
+export type TenantUsageMetric = never;
