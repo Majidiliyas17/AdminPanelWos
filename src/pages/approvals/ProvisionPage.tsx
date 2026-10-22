@@ -52,6 +52,7 @@ export function ProvisionPage() {
   );
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   useEffect(() => {
     if (!request || !plans.length) return;
@@ -115,6 +116,13 @@ export function ProvisionPage() {
     void navigator.clipboard?.writeText(provisioned.tenantCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  function copyInvite() {
+    if (!provisioned?.inviteUrl) return;
+    void navigator.clipboard?.writeText(provisioned.inviteUrl);
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 1500);
   }
 
   return (
@@ -262,10 +270,21 @@ export function ProvisionPage() {
               Invite ready for {request.email}
             </p>
             <p className="mt-1 text-[11px] text-ink-500">
-              Frontend handoff:{" "}
-              <code className="font-mono">/invite/&lt;token&gt;</code> →
-              onboarding.
+              {provisioned?.inviteEmailSent
+                ? `Activation email sent to ${request.email}.`
+                : `Email is not configured. Share the invite link with ${request.email}.`}
             </p>
+            {provisioned?.inviteUrl && (
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <code className="max-w-full break-all rounded-md border border-line bg-white px-3 py-2 text-left text-[10px]">
+                  {provisioned.inviteUrl}
+                </code>
+                <Button variant="secondary" onClick={copyInvite}>
+                  {inviteCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  {inviteCopied ? "Copied" : "Copy invite"}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

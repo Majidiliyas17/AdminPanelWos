@@ -76,6 +76,7 @@ export interface ProvisionedTenant {
   tenantId: string;
   tenantCode: string;
   inviteUrl?: string;
+  inviteEmailSent: boolean;
 }
 
 export interface PlatformDashboard {
