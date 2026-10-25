@@ -1,8 +1,3 @@
-export const PLATFORM_ACCOUNT = {
-  email: "platform@warehouseos.local",
-  password: "Platform@12345",
-};
-
 export const roleCards = [
   {
     role: "Super Admin",

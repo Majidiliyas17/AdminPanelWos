@@ -88,6 +88,36 @@ export function ProvisionPage() {
     );
   }
 
+  if (request.status !== "Pending") {
+    const wasApproved = request.status === "Approved";
+    return (
+      <Page>
+        <PageHeader
+          breadcrumb={["WarehouseOS", "Platform Console", "Approvals", "Provision"]}
+          title={wasApproved ? "Request already approved" : `Request ${request.status.toLowerCase()}`}
+          subtitle={request.companyName}
+        />
+        <PanelCard>
+          <p className="text-[13px] text-ink-700">
+            {wasApproved
+              ? "This request has already been approved and the tenant was provisioned. The approval action cannot be repeated."
+              : "This request is no longer pending, so it cannot be provisioned."}
+          </p>
+          <div className="mt-4 flex gap-2">
+            {wasApproved && (
+              <Link to="/tenants">
+                <Button>View Tenants</Button>
+              </Link>
+            )}
+            <Link to="/approvals">
+              <Button variant="secondary">Back to Approvals</Button>
+            </Link>
+          </div>
+        </PanelCard>
+      </Page>
+    );
+  }
+
   const selectedPlan = plans.find((p) => p.id === planId);
 
   async function generateAndSend() {

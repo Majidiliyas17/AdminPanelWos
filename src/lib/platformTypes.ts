@@ -59,9 +59,6 @@ export interface CreatedPlatformStaff {
   id: string;
   email: string;
   role: string;
-  mfaSecret: string;
-  authenticatorUri: string;
-  recoveryCodes: string[];
 }
 
 export interface AuditEvent {

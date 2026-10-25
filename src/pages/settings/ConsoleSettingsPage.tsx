@@ -78,12 +78,6 @@ export function ConsoleSettingsPage() {
 
         <div className="space-y-4">
           <PanelCard title="Security" icon={<Lock className="size-3.5" />}>
-            <div className="mb-3 flex items-center justify-between rounded-lg border border-line bg-[#f9fafb] px-3 py-2">
-              <span className="text-[12px] text-ink-500">
-                Two-factor authentication
-              </span>
-              <StatusChip tone="success" label="Enabled" />
-            </div>
             <Field label="Current password">
               <input
                 type="password"
