@@ -59,9 +59,6 @@ export interface CreatedPlatformStaff {
   id: string;
   email: string;
   role: string;
-  mfaSecret: string;
-  authenticatorUri: string;
-  recoveryCodes: string[];
 }
 
 export interface AuditEvent {
@@ -76,6 +73,7 @@ export interface ProvisionedTenant {
   tenantId: string;
   tenantCode: string;
   inviteUrl?: string;
+  inviteEmailSent: boolean;
 }
 
 export interface PlatformDashboard {

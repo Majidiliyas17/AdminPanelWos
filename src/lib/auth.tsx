@@ -12,8 +12,6 @@ interface AdminAuthState {
   login: (
     email: string,
     password: string,
-    mfaCode?: string,
-    recoveryCode?: string,
   ) => Promise<void>;
   logout: () => void;
 }
@@ -28,15 +26,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   async function login(
     email: string,
     password: string,
-    mfaCode?: string,
-    recoveryCode?: string,
   ) {
-    const session = await platformAuthApi.login(
-      email,
-      password,
-      mfaCode,
-      recoveryCode,
-    );
+    const session = await platformAuthApi.login(email, password);
     const mapped: PlatformSession = {
       id: session.id,
       name: session.name,

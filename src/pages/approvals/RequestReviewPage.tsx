@@ -63,18 +63,7 @@ export function RequestReviewPage() {
   const queueHours = hoursSince(request.submittedAtUtc);
 
   async function onApprove() {
-    setBusy(true);
-    try {
-      await platformApi.approveRequest(request!.id);
-      toast.success(
-        "Request approved",
-        `${request!.companyName} is being provisioned.`,
-      );
-      navigate(`/approvals/${request!.id}/provision`);
-    } catch {
-    } finally {
-      setBusy(false);
-    }
+    navigate(`/approvals/${request!.id}/provision`);
   }
 
   async function onReject() {
@@ -112,11 +101,15 @@ export function RequestReviewPage() {
         subtitle="Reviewing new tenant application"
         action={
           <>
-            <Button variant="secondary" onClick={() => setRejectOpen(true)}>
+            <Button
+              variant="secondary"
+              onClick={() => setRejectOpen(true)}
+              disabled={request.status !== "Pending" || busy}
+            >
               Reject
             </Button>
-            <Button onClick={onApprove} disabled={busy}>
-              {busy ? "Working…" : "✓ Approve & Provision"}
+            <Button onClick={onApprove} disabled={request.status !== "Pending" || busy}>
+              {request.status === "Pending" ? "Review Plan & Provision" : `Request ${request.status}`}
             </Button>
           </>
         }

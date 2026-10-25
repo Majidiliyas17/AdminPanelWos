@@ -168,22 +168,14 @@ export interface PlatformLoginResponse {
   email: string;
   role: string;
   token: string;
-  recoveryUsed?: boolean;
 }
 
 export const platformAuthApi = {
-  login: (
-    email: string,
-    password: string,
-    mfaCode?: string,
-    recoveryCode?: string,
-  ) =>
+  login: (email: string, password: string) =>
     adminApi
       .post<PlatformLoginResponse>("/platform/auth/login", {
         email,
         password,
-        mfaCode: mfaCode || undefined,
-        recoveryCode: recoveryCode || undefined,
       })
       .then((r) => r.data),
 };

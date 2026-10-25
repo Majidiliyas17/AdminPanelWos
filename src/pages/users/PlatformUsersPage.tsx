@@ -33,8 +33,6 @@ const ROLE_OPTIONS = ["SuperAdmin", "Support Lead", "Support", "Billing Ops"];
 interface CreatedStaff {
   email: string;
   role: string;
-  mfaSecret: string;
-  recoveryCodes: string[];
 }
 
 export function PlatformUsersPage() {
@@ -79,8 +77,6 @@ export function PlatformUsersPage() {
       setCreated({
         email: result.email,
         role: result.role,
-        mfaSecret: result.mfaSecret,
-        recoveryCodes: [...result.recoveryCodes],
       });
       toast.success(
         "Platform user created",
@@ -201,9 +197,6 @@ export function PlatformUsersPage() {
         <h3 className="text-[16px] font-bold text-ink-900">
           Add Platform Staff
         </h3>
-        <p className="mt-1 text-[12px] text-ink-500">
-          MFA is enabled automatically. Secret and recovery codes show once.
-        </p>
         <div className="mt-4 space-y-3">
           <Field label="Full name">
             <input
@@ -260,29 +253,15 @@ export function PlatformUsersPage() {
         </div>
       </Modal>
 
-      <Modal open={!!created} onClose={() => setCreated(null)} width="max-w-lg">
+      <Modal open={!!created} onClose={() => setCreated(null)}>
         <h3 className="text-[16px] font-bold text-ink-900">
-          Staff created — copy now
+          Platform staff created
         </h3>
         <p className="mt-1 text-[12px] text-ink-500">
-          This is the only time the authenticator secret and codes are shown.
+          {created?.email} was added as {created?.role}.
         </p>
-        <p className="mt-3 text-[11px] font-semibold text-[#374151]">
-          TOTP secret
-        </p>
-        <pre className="rounded-lg bg-[#f9fafb] p-2 font-mono text-[11px] break-all">
-          {created?.mfaSecret}
-        </pre>
-        <p className="mt-3 text-[11px] font-semibold text-[#374151]">
-          Recovery codes
-        </p>
-        <ul className="rounded-lg bg-[#f9fafb] p-2 font-mono text-[11px]">
-          {created?.recoveryCodes.map((code) => (
-            <li key={code}>{code}</li>
-          ))}
-        </ul>
         <div className="mt-4 flex justify-end">
-          <Button onClick={() => setCreated(null)}>I saved these</Button>
+          <Button onClick={() => setCreated(null)}>Done</Button>
         </div>
       </Modal>
     </Page>

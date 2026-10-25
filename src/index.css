@@ -41,6 +41,89 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+::selection {
+  color: #4c1d95;
+  background: #ede9fe;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(124 58 237 / 35%);
+  outline-offset: 2px;
+}
+
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+main {
+  scrollbar-color: #c4b5fd transparent;
+  scrollbar-width: thin;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 10%);
+  outline: none;
+}
+
+button:not(:disabled) {
+  transition: background-color 150ms ease, border-color 150ms ease,
+    box-shadow 150ms ease, transform 150ms ease;
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+section.rounded-\[10px\].border,
+div.rounded-\[10px\].border {
+  box-shadow: 0 1px 2px rgb(17 24 39 / 4%);
+}
+
+table.wos-table tbody tr {
+  transition: background-color 120ms ease;
+}
+
+table.wos-table tbody tr:hover {
+  background: #faf9ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Keep the console's shared card grids usable on tablets and phones. */
+@media (max-width: 900px) {
+  .grid.grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .grid.grid-cols-4,
+  .grid.grid-cols-3,
+  .grid.grid-cols-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 table.wos-table th {
   font-size: 10px;
   font-weight: 600;
