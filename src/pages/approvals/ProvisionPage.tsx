@@ -295,7 +295,7 @@ export function ProvisionPage() {
         )}
 
         {step >= 3 && (
-          <div className="mt-4 rounded-xl border border-success/20 bg-success-tint px-6 py-5 text-center">
+          <div className="mt-4 rounded-xl border border-success/30 bg-success-tint-soft px-6 py-5 text-center">
             <p className="text-[13px] font-bold text-success">
               Invite ready for {request.email}
             </p>

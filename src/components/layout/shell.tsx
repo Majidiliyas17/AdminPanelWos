@@ -12,9 +12,11 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Moon,
   Search,
   Settings,
   ShieldCheck,
+  Sun,
   Users,
   Warehouse,
   X,
@@ -23,6 +25,7 @@ import { cn } from "@/lib/cn";
 import { useAdminAuth } from "@/lib/auth";
 import { platformApi } from "@/lib/platformApi";
 import { useAsync } from "@/lib/useAsync";
+import { useTheme } from "@/lib/theme";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -84,11 +87,11 @@ export function Sidebar({
         )}
       >
         <div className={cn("flex items-center gap-2 pt-4 pb-3", collapsed ? "md:justify-center md:px-2 px-4" : "px-4")}>
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-brand-violet text-white shadow-[0_10px_24px_-12px_rgb(124_108_255/90%)]">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-brand-violet text-white shadow-[0_10px_24px_-12px_rgb(124_108_255/35%)]">
             <Warehouse className="size-4" />
           </span>
           <span className={cn("min-w-0", collapsed && "md:hidden")}>
-            <span className="block text-[13.5px] font-bold tracking-tight text-white">
+            <span className="block text-[13.5px] font-bold tracking-tight text-ink-900">
               Warehouse<span className="text-brand-violet">OS</span>
             </span>
             <span className="block text-[10px] font-semibold tracking-[0.18em] text-ink-muted">
@@ -99,7 +102,7 @@ export function Sidebar({
             type="button"
             onClick={onCloseMobile}
             aria-label="Close navigation"
-            className="ml-auto grid size-8 place-items-center rounded-lg text-ink-muted hover:bg-sidebar-active hover:text-white md:hidden"
+            className="ml-auto grid size-8 place-items-center rounded-lg text-ink-muted hover:bg-sidebar-active hover:text-ink-900 md:hidden"
           >
             <X className="size-4" />
           </button>
@@ -115,11 +118,11 @@ export function Sidebar({
           {collapsed ? (
             <>
               <ShieldCheck className="mx-auto hidden size-4 text-brand-violet md:block" />
-              <span className="block text-[12px] font-semibold text-white md:hidden">{role}</span>
+              <span className="block text-[12px] font-semibold text-ink-900 md:hidden">{role}</span>
             </>
           ) : (
             <>
-              <span className="block text-[12px] font-semibold text-white">{role}</span>
+              <span className="block text-[12px] font-semibold text-ink-900">{role}</span>
               <span className="block text-[10.5px] text-ink-muted">All tenants · Global</span>
             </>
           )}
@@ -138,8 +141,8 @@ export function Sidebar({
                   "group relative flex items-center rounded-lg py-2 text-[12.5px] font-medium transition-colors",
                   collapsed ? "md:justify-center md:px-0 gap-3 px-3" : "gap-3 px-3",
                   isActive
-                    ? "bg-sidebar-active text-white [&>svg]:text-brand-violet"
-                    : "text-ink-500 hover:bg-sidebar-active/70 hover:text-white",
+                    ? "bg-sidebar-active text-ink-900 before:absolute before:inset-y-1 before:left-0 before:w-[3px] before:rounded-r-full before:bg-success before:shadow-[0_0_10px_rgb(192_217_37/45%)] before:content-[''] [&>svg]:text-success"
+                    : "text-ink-500 hover:bg-sidebar-active/70 hover:text-ink-900",
                 )
               }
             >
@@ -155,7 +158,7 @@ export function Sidebar({
               {initialsOf(user?.name)}
             </span>
             <span className={cn("min-w-0 flex-1", collapsed && "md:hidden")}>
-              <span className="block truncate text-[11.5px] font-semibold text-white">
+              <span className="block truncate text-[11.5px] font-semibold text-ink-900">
                 {user?.name || user?.email || "Signed-in user"}
               </span>
               <span className="block truncate text-[10.5px] text-ink-muted">{role}</span>
@@ -165,7 +168,7 @@ export function Sidebar({
               onClick={logout}
               title="Sign out"
               aria-label="Sign out"
-              className="grid size-7 shrink-0 place-items-center rounded-md text-ink-muted hover:bg-sidebar-active hover:text-white"
+              className="grid size-7 shrink-0 place-items-center rounded-md text-ink-muted hover:bg-sidebar-active hover:text-ink-900"
             >
               <LogOut className="size-3.5" />
             </button>
@@ -176,7 +179,7 @@ export function Sidebar({
           onClick={onToggle}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="mx-2 mb-3 hidden h-8 items-center justify-center gap-2 rounded-lg text-[12px] text-ink-500 hover:bg-sidebar-active hover:text-white md:flex"
+          className="mx-2 mb-3 hidden h-8 items-center justify-center gap-2 rounded-lg text-[12px] text-ink-500 hover:bg-sidebar-active hover:text-ink-900 md:flex"
         >
           {collapsed ? <ChevronsRight className="size-4" /> : <><ChevronsLeft className="size-4" />Collapse sidebar</>}
         </button>
@@ -195,6 +198,7 @@ export function Topbar({
   onOpenMobile: () => void;
 }) {
   const { user, logout } = useAdminAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -218,7 +222,7 @@ export function Topbar({
   }
 
   return (
-    <header className="relative z-30 flex h-16 shrink-0 items-center gap-3 border-b border-line/80 bg-surface/80 px-4 backdrop-blur-xl">
+    <header className="relative z-30 flex h-16 shrink-0 items-center gap-3 border-b border-line/80 bg-surface/90 px-4 backdrop-blur-xl">
       <button
         type="button"
         onClick={onOpenMobile}
@@ -255,7 +259,7 @@ export function Topbar({
           </kbd>
         </form>
         {query.trim() && (
-          <div className="absolute top-12 right-0 left-0 overflow-hidden rounded-xl border border-line-strong bg-surface p-1 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]">
+          <div className="absolute top-12 right-0 left-0 overflow-hidden rounded-xl border border-line-strong bg-surface p-1 wos-shadow-overlay">
             {matches.length ? (
               matches.slice(0, 5).map((item) => (
                 <button
@@ -276,6 +280,7 @@ export function Topbar({
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <button type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`} title={`Switch to ${theme === "light" ? "dark" : "light"} mode`} className="grid size-9 place-items-center rounded-lg border border-line bg-surface-2 text-ink-500 hover:bg-surface-3 hover:text-ink-900">{theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}</button>
         <button
           type="button"
           onClick={() => navigate("/approvals")}
@@ -310,7 +315,7 @@ export function Topbar({
             <ChevronDown className="size-3 text-ink-muted" />
           </button>
           {profileOpen && (
-            <div className="absolute top-12 right-0 w-60 overflow-hidden rounded-xl border border-line-strong bg-surface p-2 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]">
+            <div className="absolute top-12 right-0 w-60 overflow-hidden rounded-xl border border-line-strong bg-surface p-2 wos-shadow-overlay">
               <p className="truncate px-2 py-1 text-[11.5px] font-semibold text-ink-900">{user?.name || "Signed-in user"}</p>
               <p className="truncate px-2 pb-2 text-[11.5px] text-ink-500">{user?.email || ""}</p>
               <div className="border-t border-line pt-1">
@@ -349,7 +354,7 @@ export function ConsoleFooter() {
 }
 
 export function AppShell() {
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSED_KEY) === "true");
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSED_KEY) !== "false");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
   const toggleSidebar = () => setCollapsed((value) => { const next = !value; localStorage.setItem(COLLAPSED_KEY, String(next)); return next; });
@@ -425,5 +430,5 @@ export function PageHeader({
 }
 
 export function Page({ children }: { children: React.ReactNode }) {
-  return <div className="p-4 sm:p-6">{children}</div>;
+  return <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-5 lg:p-7">{children}</div>;
 }
