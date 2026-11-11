@@ -116,7 +116,7 @@ export function Toaster() {
           <div
             key={item.id}
             className={cn(
-              "pointer-events-auto overflow-hidden rounded-xl border border-line-strong bg-surface shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]",
+              "pointer-events-auto overflow-hidden rounded-xl border border-line-strong bg-surface wos-shadow-overlay",
               "animate-[toast-in_180ms_ease-out]",
             )}
           >
