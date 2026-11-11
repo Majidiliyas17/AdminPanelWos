@@ -183,7 +183,7 @@ export function ProvisionPage() {
         </p>
 
         {plans.length === 0 && (
-          <p className="mb-3 rounded-lg bg-warning-tint px-3 py-2 text-[11px] text-warning">
+          <p className="mb-3 rounded-lg bg-warning-tint px-3 py-2 text-[12px] text-warning">
             No plans configured yet. Backend me /platform/plans par plans add
             karein.
           </p>
@@ -191,7 +191,7 @@ export function ProvisionPage() {
 
         <PanelCard>
           <div className="grid grid-cols-3 gap-4">
-            <label className="block text-[11px] font-semibold text-[#374151]">
+            <label className="block text-[12px] font-semibold text-ink-700">
               Plan
               <select
                 value={planId}
@@ -205,7 +205,7 @@ export function ProvisionPage() {
                   }
                   setStep(1);
                 }}
-                className={`mt-1 h-9 w-full rounded-lg border bg-white px-3 text-[12px] outline-none ${
+                className={`mt-1 h-9 w-full rounded-lg border bg-surface px-3 text-[12px] outline-none ${
                   step >= 2
                     ? "border-primary ring-1 ring-primary/30"
                     : "border-line"
@@ -218,51 +218,51 @@ export function ProvisionPage() {
                 ))}
               </select>
             </label>
-            <label className="block text-[11px] font-semibold text-[#374151]">
+            <label className="block text-[12px] font-semibold text-ink-700">
               Warehouse Limit
               <input
                 value={warehouseLimit}
                 disabled={step >= 3}
                 onChange={(e) => setWarehouseLimit(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border border-line bg-white px-3 text-[12px] outline-none focus:border-primary"
+                className="mt-1 h-9 w-full rounded-lg border border-line bg-surface px-3 text-[12px] outline-none focus:border-primary"
               />
             </label>
-            <label className="block text-[11px] font-semibold text-[#374151]">
+            <label className="block text-[12px] font-semibold text-ink-700">
               User Seats
               <input
                 value={seats}
                 disabled={step >= 3}
                 onChange={(e) => setSeats(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border border-line bg-white px-3 text-[12px] outline-none focus:border-primary"
+                className="mt-1 h-9 w-full rounded-lg border border-line bg-surface px-3 text-[12px] outline-none focus:border-primary"
               />
             </label>
-            <label className="block text-[11px] font-semibold text-[#374151]">
+            <label className="block text-[12px] font-semibold text-ink-700">
               Billing Currency
               <input
                 value={currency}
                 disabled={step >= 3}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border border-line bg-white px-3 text-[12px] outline-none focus:border-primary"
+                className="mt-1 h-9 w-full rounded-lg border border-line bg-surface px-3 text-[12px] outline-none focus:border-primary"
               />
             </label>
-            <label className="block text-[11px] font-semibold text-[#374151]">
+            <label className="block text-[12px] font-semibold text-ink-700">
               Trial Period
               <input
                 value={trial}
                 disabled={step >= 3}
                 onChange={(e) => setTrial(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border border-line bg-white px-3 text-[12px] outline-none focus:border-primary"
+                className="mt-1 h-9 w-full rounded-lg border border-line bg-surface px-3 text-[12px] outline-none focus:border-primary"
               />
             </label>
             {selectedPlan && (
-              <div className="rounded-lg border border-line bg-[#fafafa] px-3 py-2">
-                <p className="text-[10px] font-semibold tracking-wide text-ink-muted uppercase">
+              <div className="rounded-lg border border-line bg-surface-2 px-3 py-2">
+                <p className="text-[11px] font-semibold tracking-wide text-ink-muted uppercase">
                   Selected plan
                 </p>
                 <p className="mt-0.5 text-[12px] font-semibold text-ink-900">
                   {selectedPlan.name} · ${selectedPlan.monthlyPrice}/mo
                 </p>
-                <p className="text-[11px] text-ink-500">
+                <p className="text-[12px] text-ink-500">
                   {selectedPlan.maxWarehouses} warehouses ·{" "}
                   {selectedPlan.maxUserSeats} seats
                 </p>
@@ -273,7 +273,7 @@ export function ProvisionPage() {
 
         {provisioned && (
           <div className="mt-4 rounded-xl border border-primary/20 bg-primary-tint px-6 py-5 text-center">
-            <p className="text-[11px] font-medium text-ink-500">
+            <p className="text-[12px] font-medium text-ink-500">
               Generated Tenant ID
             </p>
             <button
@@ -288,7 +288,7 @@ export function ProvisionPage() {
                 <Copy className="size-4" />
               )}
             </button>
-            <p className="mt-1 text-[11px] text-ink-500">
+            <p className="mt-1 text-[12px] text-ink-500">
               This ID scopes all data, users and billing for this organization
             </p>
           </div>
@@ -299,14 +299,14 @@ export function ProvisionPage() {
             <p className="text-[13px] font-bold text-success">
               Invite ready for {request.email}
             </p>
-            <p className="mt-1 text-[11px] text-ink-500">
+            <p className="mt-1 text-[12px] text-ink-500">
               {provisioned?.inviteEmailSent
                 ? `Activation email sent to ${request.email}.`
                 : `Email is not configured. Share the invite link with ${request.email}.`}
             </p>
             {provisioned?.inviteUrl && (
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                <code className="max-w-full break-all rounded-md border border-line bg-white px-3 py-2 text-left text-[10px]">
+                <code className="max-w-full break-all rounded-md border border-line bg-surface px-3 py-2 text-left text-[11px]">
                   {provisioned.inviteUrl}
                 </code>
                 <Button variant="secondary" onClick={copyInvite}>

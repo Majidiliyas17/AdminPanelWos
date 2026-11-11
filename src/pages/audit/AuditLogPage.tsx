@@ -62,7 +62,7 @@ const actionIcons: Array<{
     icon: Flag,
     tone: "bg-violet-tint text-brand-violet",
   },
-  { match: () => true, icon: ShieldCheck, tone: "bg-[#f3f4f6] text-ink-500" },
+  { match: () => true, icon: ShieldCheck, tone: "bg-surface-3 text-ink-500" },
 ];
 
 function iconFor(event: AuditEvent) {
@@ -123,7 +123,7 @@ export function AuditLogPage() {
           <button
             onClick={() => exportCsv(events)}
             disabled={events.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-[13px] font-semibold text-ink-900 hover:bg-[#f9fafb] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-2 text-[13px] font-semibold text-ink-900 hover:bg-surface-2 disabled:opacity-50"
           >
             <Download className="size-3.5" />
             Export
@@ -187,18 +187,18 @@ export function AuditLogPage() {
           events.map((event) => (
             <div
               key={event.id}
-              className="flex items-start gap-3 border-b border-[#f3f4f6] py-3 last:border-0"
+              className="flex items-start gap-3 border-b border-line py-3 last:border-0"
             >
               {iconFor(event)}
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-bold text-ink-900">
                   {event.title}
                 </p>
-                <p className="mt-0.5 text-[11px] text-ink-500">
+                <p className="mt-0.5 text-[12px] text-ink-500">
                   {event.detail}
                 </p>
               </div>
-              <span className="shrink-0 font-mono text-[11px] text-ink-500">
+              <span className="shrink-0 font-mono text-[12px] text-ink-500">
                 {formatDateTime(event.timestampUtc)}
               </span>
             </div>

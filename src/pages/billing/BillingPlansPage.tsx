@@ -152,7 +152,7 @@ export function BillingPlansPage() {
           {plans.map((plan: PlatformPlan) => (
             <div
               key={plan.id}
-              className="rounded-xl border border-[#ececef] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
+              className="rounded-xl border border-line bg-surface p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[15px] font-bold text-ink-900">
@@ -165,7 +165,7 @@ export function BillingPlansPage() {
               </div>
               <p className="mt-1 text-[24px] font-bold text-ink-900">
                 ${plan.monthlyPrice.toLocaleString("en-US")}
-                <span className="ml-0.5 text-[11px] font-medium text-ink-500">
+                <span className="ml-0.5 text-[12px] font-medium text-ink-500">
                   /mo
                 </span>
               </p>
@@ -240,7 +240,7 @@ export function BillingPlansPage() {
           </div>
         </div>
         {formError && (
-          <p className="mt-3 rounded-lg bg-danger-tint px-3 py-2 text-[11px] text-danger">
+          <p className="mt-3 rounded-lg bg-danger-tint px-3 py-2 text-[12px] text-danger">
             {formError}
           </p>
         )}

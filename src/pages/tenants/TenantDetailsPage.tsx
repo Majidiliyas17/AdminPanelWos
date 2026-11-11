@@ -167,7 +167,7 @@ export function TenantDetailsPage() {
             ) : (
               <button
                 onClick={() => setSuspendOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-danger bg-white px-3.5 py-2 text-[13px] font-semibold text-danger hover:bg-danger-tint"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-danger bg-surface px-3.5 py-2 text-[13px] font-semibold text-danger hover:bg-danger-tint"
               >
                 <ShieldAlert className="size-3.5" />
                 Suspend Tenant
@@ -200,7 +200,7 @@ export function TenantDetailsPage() {
             tenant.activeUsers != null && tenant.userSeats != null ? (
               <>
                 {tenant.activeUsers}
-                <span className="ml-1 text-[11px] font-medium text-ink-500">
+                <span className="ml-1 text-[12px] font-medium text-ink-500">
                   of {tenant.userSeats} seats
                 </span>
               </>
@@ -216,7 +216,7 @@ export function TenantDetailsPage() {
             tenant.healthScore != null ? (
               <>
                 {tenant.healthScore}
-                <span className="ml-1 text-[11px] font-medium text-ink-500">
+                <span className="ml-1 text-[12px] font-medium text-ink-500">
                   /100
                 </span>
               </>
@@ -247,7 +247,7 @@ export function TenantDetailsPage() {
             {infoRows.map(([label, value]) => (
               <div
                 key={label}
-                className="flex items-center justify-between border-b border-[#f3f4f6] py-2.5 last:border-0"
+                className="flex items-center justify-between border-b border-line py-2.5 last:border-0"
               >
                 <dt className="text-[12px] text-ink-500">{label}</dt>
                 <dd className="text-[12px] font-semibold text-ink-900">
@@ -359,7 +359,7 @@ export function TenantDetailsPage() {
           short-lived token to the Frontend app via its impersonation entry
           point.
         </p>
-        <pre className="mt-3 max-h-32 overflow-auto rounded-lg bg-[#f9fafb] p-3 font-mono text-[10px] break-all whitespace-pre-wrap">
+        <pre className="mt-3 max-h-32 overflow-auto rounded-lg bg-surface-2 p-3 font-mono text-[11px] break-all whitespace-pre-wrap">
           {impersonation?.token}
         </pre>
         <div className="mt-4 flex justify-end gap-2">
@@ -367,7 +367,7 @@ export function TenantDetailsPage() {
         </div>
       </Modal>
 
-      <p className="mt-4 text-[11px] text-ink-500">
+      <p className="mt-4 text-[12px] text-ink-500">
         <Link
           to="/tenants"
           className="font-semibold text-primary hover:underline"

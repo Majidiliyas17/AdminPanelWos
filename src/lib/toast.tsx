@@ -116,7 +116,7 @@ export function Toaster() {
           <div
             key={item.id}
             className={cn(
-              "pointer-events-auto overflow-hidden rounded-xl border border-line bg-white shadow-[0_12px_32px_rgba(17,24,39,0.18)]",
+              "pointer-events-auto overflow-hidden rounded-xl border border-line-strong bg-surface shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]",
               "animate-[toast-in_180ms_ease-out]",
             )}
           >
@@ -130,11 +130,11 @@ export function Toaster() {
                 <Icon className="size-3.5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-semibold text-ink-900">
+                <p className="text-[12.5px] font-semibold text-ink-900">
                   {item.title}
                 </p>
                 {item.description && (
-                  <p className="mt-0.5 text-[11px] leading-relaxed text-ink-500">
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-ink-500">
                     {item.description}
                   </p>
                 )}
@@ -144,7 +144,7 @@ export function Toaster() {
                 onClick={() =>
                   commit(items.filter((row) => row.id !== item.id))
                 }
-                className="grid size-5 shrink-0 place-items-center rounded text-ink-muted hover:bg-[#f3f4f6] hover:text-ink-500"
+                className="grid size-5 shrink-0 place-items-center rounded text-ink-muted hover:bg-surface-3 hover:text-ink-500"
               >
                 <X className="size-3" />
               </button>

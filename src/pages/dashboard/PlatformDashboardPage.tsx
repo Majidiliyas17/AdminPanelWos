@@ -3,8 +3,8 @@ import { BadgeCheck, Building2, Clock, FileText } from "lucide-react";
 import { Page, PageHeader } from "@/components/layout/shell";
 import {
   DataTable,
-  DeltaPill,
   ErrorState,
+  InfoPill,
   PanelCard,
   Skeleton,
   StatCard,
@@ -112,15 +112,13 @@ export function PlatformDashboardPage() {
           label="Total Tenants"
           value={kpis.totalTenants}
           icon={<Building2 className="size-4" />}
-          delta={<DeltaPill direction="up">{kpis.totalTenantsDelta}</DeltaPill>}
+          delta={<InfoPill>{kpis.totalTenantsDelta}</InfoPill>}
         />
         <StatCard
           label="Active Tenants"
           value={kpis.activeTenants}
           icon={<BadgeCheck className="size-4" />}
-          delta={
-            <DeltaPill direction="up">{kpis.activeTenantsDelta}</DeltaPill>
-          }
+          delta={<InfoPill>{kpis.activeTenantsDelta}</InfoPill>}
         />
         <StatCard
           label="Pending Approvals"
@@ -128,11 +126,9 @@ export function PlatformDashboardPage() {
           icon={<Clock className="size-4" />}
           delta={
             kpis.pendingApprovals > 0 ? (
-              <DeltaPill direction="down" tone="danger">
-                {kpis.pendingApprovalsDelta}
-              </DeltaPill>
+              <InfoPill tone="danger">{kpis.pendingApprovalsDelta}</InfoPill>
             ) : (
-              <DeltaPill direction="up">{kpis.pendingApprovalsDelta}</DeltaPill>
+              <InfoPill tone="success">{kpis.pendingApprovalsDelta}</InfoPill>
             )
           }
         />
@@ -140,7 +136,7 @@ export function PlatformDashboardPage() {
           label="MRR"
           value={kpis.mrr}
           icon={<FileText className="size-4" />}
-          delta={<DeltaPill direction="up">{kpis.mrrDelta}</DeltaPill>}
+          delta={<InfoPill>{kpis.mrrDelta}</InfoPill>}
         />
       </div>
 
@@ -151,7 +147,7 @@ export function PlatformDashboardPage() {
         action={
           <Link
             to="/approvals"
-            className="text-[11px] font-semibold text-primary hover:underline"
+            className="text-[12px] font-semibold text-primary hover:underline"
           >
             View All
           </Link>
@@ -167,7 +163,7 @@ export function PlatformDashboardPage() {
             <Link
               key={request.id}
               to={`/approvals/${request.id}`}
-              className="rounded-xl border border-line bg-white p-3 transition-colors hover:border-primary/40 hover:bg-primary-tint/40"
+              className="rounded-xl border border-line bg-surface p-3 transition-colors hover:border-primary/40 hover:bg-primary-tint/40"
             >
               <StatusChip
                 tone={statusTone[request.status] ?? "neutral"}
@@ -176,7 +172,7 @@ export function PlatformDashboardPage() {
               <p className="mt-2 text-[13px] font-bold text-ink-900">
                 {request.companyName}
               </p>
-              <p className="mt-0.5 text-[11px] text-ink-500">
+              <p className="mt-0.5 text-[12px] text-ink-500">
                 Applied {relativeTime(request.submittedAtUtc)} ·{" "}
                 {request.country}
               </p>

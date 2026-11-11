@@ -166,10 +166,10 @@ export function PlatformUsersPage() {
         {roleCards.map((card) => (
           <div
             key={card.role}
-            className="rounded-xl border border-[#ececef] bg-white p-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
+            className="rounded-xl border border-line bg-surface p-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
           >
             <p className="text-[12px] font-bold text-ink-900">{card.role}</p>
-            <p className="mt-1 text-[11px] text-ink-500">{card.description}</p>
+            <p className="mt-1 text-[12px] text-ink-500">{card.description}</p>
           </div>
         ))}
       </div>
@@ -238,7 +238,7 @@ export function PlatformUsersPage() {
           </Field>
         </div>
         {formError && (
-          <p className="mt-3 rounded-lg bg-danger-tint px-3 py-2 text-[11px] text-danger">
+          <p className="mt-3 rounded-lg bg-danger-tint px-3 py-2 text-[12px] text-danger">
             {formError}
           </p>
         )}
