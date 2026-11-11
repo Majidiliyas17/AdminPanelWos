@@ -61,7 +61,7 @@ export function ConsoleSettingsPage() {
             />
           </Field>
           <Field label="Role" className="mt-3">
-            <div className="mt-1 flex h-9 items-center gap-2 rounded-lg border border-line bg-[#f9fafb] px-3">
+            <div className="mt-1 flex h-9 items-center gap-2 rounded-lg border border-line bg-surface-2 px-3">
               <span className="text-[12px] font-semibold text-ink-900">
                 {user?.role || "SuperAdmin"}
               </span>
@@ -122,7 +122,7 @@ export function ConsoleSettingsPage() {
                 ))}
               </select>
             </Field>
-            <p className="mt-3 text-[11px] text-ink-500">
+            <p className="mt-3 text-[12px] text-ink-500">
               Super Admin sessions expire after the idle timeout. Impersonation
               tokens are always capped at 15 minutes.
             </p>

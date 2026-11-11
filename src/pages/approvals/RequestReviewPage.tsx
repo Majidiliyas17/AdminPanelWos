@@ -131,7 +131,7 @@ export function RequestReviewPage() {
           value={
             <>
               {queueHours}
-              <span className="ml-1 text-[11px] font-medium text-ink-500">
+              <span className="ml-1 text-[12px] font-medium text-ink-500">
                 hrs
               </span>
             </>
@@ -162,7 +162,7 @@ export function RequestReviewPage() {
             {detailRows.map(([label, value]) => (
               <div
                 key={label}
-                className="flex items-center justify-between border-b border-[#f3f4f6] py-2.5 last:border-0"
+                className="flex items-center justify-between border-b border-line py-2.5 last:border-0"
               >
                 <dt className="text-[12px] text-ink-500">{label}</dt>
                 <dd
@@ -197,7 +197,7 @@ export function RequestReviewPage() {
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="Add an internal note before deciding (visible to platform team only)…"
-              className="w-full rounded-lg border border-line bg-white px-3 py-2 text-[12px] outline-none focus:border-primary"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-[12px] outline-none focus:border-primary"
             />
           </PanelCard>
         </div>
@@ -211,7 +211,7 @@ export function RequestReviewPage() {
           The applicant will be marked as rejected. Add an optional note for the
           audit trail.
         </p>
-        <label className="mt-4 block text-[11px] font-semibold text-[#374151]">
+        <label className="mt-4 block text-[12px] font-semibold text-ink-700">
           Note (optional)
           <textarea
             rows={3}
@@ -231,7 +231,7 @@ export function RequestReviewPage() {
         </div>
       </Modal>
 
-      <p className="mt-4 text-[11px] text-ink-500">
+      <p className="mt-4 text-[12px] text-ink-500">
         <Link
           to="/approvals"
           className="font-semibold text-primary hover:underline"

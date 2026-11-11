@@ -163,8 +163,8 @@ export function TenantsListPage() {
         />
       </div>
 
-      <section className="mt-4 rounded-xl border border-[#ececef] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-        <header className="flex items-center justify-between gap-3 border-b border-[#f3f4f6] px-4 py-3">
+      <section className="mt-4 rounded-xl border border-line bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+        <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h3 className="flex items-center gap-2 text-[13px] font-semibold text-ink-900">
             <span className="grid size-5 place-items-center rounded-md bg-primary-tint text-primary">
               <Building2 className="size-3" />
@@ -175,7 +175,7 @@ export function TenantsListPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search tenant or ID…"
-            className="h-8 w-52 rounded-lg border border-line px-2.5 text-[11px] outline-none focus:border-primary"
+            className="h-8 w-52 rounded-lg border border-line px-2.5 text-[12px] outline-none focus:border-primary"
           />
         </header>
         <div className="px-4 pt-3">

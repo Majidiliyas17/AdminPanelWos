@@ -154,16 +154,16 @@ export function FeatureFlagsPage() {
             rows.map((flag) => (
               <div
                 key={flag.id}
-                className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] py-3 last:border-0"
+                className="flex items-start justify-between gap-3 border-b border-line py-3 last:border-0"
               >
                 <div className="min-w-0">
                   <p className="text-[13px] font-bold text-ink-900">
                     {flag.name}
                   </p>
-                  <p className="mt-0.5 font-mono text-[11px] text-ink-muted">
+                  <p className="mt-0.5 font-mono text-[12px] text-ink-muted">
                     {flag.key}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-ink-500">
+                  <p className="mt-0.5 text-[12px] text-ink-500">
                     {flag.description}
                   </p>
                 </div>
@@ -176,7 +176,7 @@ export function FeatureFlagsPage() {
                     type="button"
                     onClick={() => toggleFlag(flag, !flag.isActive)}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                      flag.isActive ? "bg-success" : "bg-[#d1d5db]"
+                      flag.isActive ? "bg-success" : "bg-surface-4"
                     }`}
                     aria-label={`Toggle ${flag.name}`}
                   >
@@ -227,7 +227,7 @@ export function FeatureFlagsPage() {
           </Field>
         </div>
         {formError && (
-          <p className="mt-3 rounded-lg bg-danger-tint px-3 py-2 text-[11px] text-danger">
+          <p className="mt-3 rounded-lg bg-danger-tint px-3 py-2 text-[12px] text-danger">
             {formError}
           </p>
         )}

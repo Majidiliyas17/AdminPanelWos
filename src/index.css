@@ -1,27 +1,47 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #4f46e5;
-  --color-primary-dark: #4338ca;
-  --color-primary-tint: #eef2ff;
-  --color-brand-violet: #7c3aed;
-  --color-violet-tint: #ede9fe;
-  --color-success: #16a34a;
-  --color-success-tint: #e7f7ef;
-  --color-warning: #d97706;
-  --color-warning-tint: #fdf0de;
-  --color-danger: #dc2626;
-  --color-danger-tint: #fdecec;
-  --color-info: #2563eb;
-  --color-info-tint: #e7eefe;
-  --color-ink-900: #111827;
-  --color-ink-500: #6b7280;
-  --color-ink-muted: #9ca3af;
-  --color-line: #e5e7eb;
-  --color-canvas: #f7f7f8;
-  --color-sidebar: #14122a;
-  --color-sidebar-card: #1f1b3a;
-  --color-sidebar-active: #2a2549;
+  /* Brand ------------------------------------------------------------ */
+  --color-primary: #7c6cff;
+  --color-primary-dark: #6a58f5;
+  --color-primary-tint: rgb(124 108 255 / 14%);
+  --color-brand: #7c6cff;
+  --color-brand-soft: #a99bff;
+  --color-brand-tint: rgb(124 108 255 / 14%);
+  --color-brand-tint-strong: rgb(124 108 255 / 24%);
+  --color-brand-violet: #a78bfa;
+  --color-violet-tint: rgb(167 139 250 / 14%);
+
+  /* Semantic --------------------------------------------------------- */
+  --color-success: #3ddc97;
+  --color-success-tint: rgb(61 220 151 / 14%);
+  --color-warning: #fbbf4d;
+  --color-warning-tint: rgb(251 191 77 / 14%);
+  --color-danger: #ff6b81;
+  --color-danger-tint: rgb(255 107 129 / 14%);
+  --color-info: #4cc9f0;
+  --color-info-tint: rgb(76 201 240 / 14%);
+
+  /* Surfaces --------------------------------------------------------- */
+  --color-canvas: #070b13;
+  --color-surface: #0d1421;
+  --color-surface-2: #111a2a;
+  --color-surface-3: #162134;
+  --color-surface-4: #1c2a40;
+  --color-line: #1e2b40;
+  --color-line-strong: #2b3b55;
+
+  /* Text ------------------------------------------------------------- */
+  --color-ink-900: #eef3fc;
+  --color-ink-700: #c7d4e8;
+  --color-ink-500: #9aabc5;
+  --color-ink-muted: #6d7f9c;
+
+  /* Chrome ----------------------------------------------------------- */
+  --color-sidebar: #060a12;
+  --color-sidebar-card: #0c1422;
+  --color-sidebar-active: #171f38;
+  --color-sidebar-glow: #1b2450;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
@@ -36,19 +56,28 @@ body,
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--color-canvas);
+  font-size: 15px;
+  line-height: 1.5;
+  background-color: var(--color-canvas);
+  background-image:
+    radial-gradient(900px 520px at 12% -8%, rgb(124 108 255 / 12%), transparent 62%),
+    radial-gradient(760px 480px at 96% 4%, rgb(76 201 240 / 6%), transparent 60%),
+    radial-gradient(1000px 700px at 50% 110%, rgb(124 108 255 / 6%), transparent 65%);
+  background-attachment: fixed;
   color: var(--color-ink-900);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  color: #4c1d95;
-  background: #ede9fe;
+  color: #ffffff;
+  background: rgb(124 108 255 / 55%);
 }
 
 :focus-visible {
-  outline: 3px solid rgb(124 58 237 / 35%);
+  outline: 2px solid rgb(169 155 255 / 80%);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 button,
@@ -58,55 +87,226 @@ a,
 }
 
 main {
-  scrollbar-color: #c4b5fd transparent;
+  scrollbar-color: #24344e transparent;
   scrollbar-width: thin;
+}
+
+* {
+  scrollbar-color: #24344e transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #23324a;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #324a6d;
+  background-clip: content-box;
 }
 
 input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  color-scheme: dark;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):focus,
 select:focus,
 textarea:focus {
-  border-color: #a78bfa !important;
-  box-shadow: 0 0 0 3px rgb(124 58 237 / 10%);
+  border-color: rgb(169 155 255 / 85%) !important;
+  box-shadow: 0 0 0 3px rgb(124 108 255 / 18%);
   outline: none;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-ink-muted);
+}
+
+select option {
+  background: #111a2a;
+  color: #eef3fc;
+}
+
 button:not(:disabled) {
-  transition: background-color 150ms ease, border-color 150ms ease,
-    box-shadow 150ms ease, transform 150ms ease;
+  transition: background-color 160ms ease, border-color 160ms ease,
+    box-shadow 160ms ease, transform 160ms ease, color 160ms ease, opacity 160ms ease;
 }
 
 button:not(:disabled):active {
   transform: translateY(1px);
 }
 
+a {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+/* Cards -------------------------------------------------------------- */
 section.rounded-\[10px\].border,
-div.rounded-\[10px\].border {
-  box-shadow: 0 1px 2px rgb(17 24 39 / 4%);
+div.rounded-\[10px\].border,
+section.rounded-xl.border,
+div.rounded-xl.border {
+  box-shadow: 0 1px 0 rgb(255 255 255 / 3%) inset,
+    0 18px 40px -28px rgb(0 0 0 / 80%);
+}
+
+/* Tables ------------------------------------------------------------- */
+table.wos-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table.wos-table th {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  text-align: left;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgb(22 33 52 / 92%), rgb(17 26 42 / 92%));
+  border-bottom: 1px solid var(--color-line);
+  white-space: nowrap;
+}
+
+table.wos-table td {
+  padding: 12px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid rgb(30 43 64 / 62%);
+  color: var(--color-ink-700);
+  vertical-align: middle;
 }
 
 table.wos-table tbody tr {
-  transition: background-color 120ms ease;
+  transition: background-color 140ms ease;
 }
 
 table.wos-table tbody tr:hover {
-  background: #faf9ff;
+  background: rgb(124 108 255 / 7%);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+table.wos-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Form helper -------------------------------------------------------- */
+.wos-input {
+  min-height: 42px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-2);
+  padding: 0 12px;
+  font-size: 13.5px;
+  color: var(--color-ink-900);
+  outline: none;
+}
+
+.wos-input:hover {
+  border-color: var(--color-line-strong);
+}
+
+/* Animations --------------------------------------------------------- */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 240ms ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface-3);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 5%),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+
+.wos-grid-texture {
+  background-image:
+    linear-gradient(rgb(124 108 255 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(124 108 255 / 5%) 1px, transparent 1px);
+  background-size: 42px 42px;
 }
 
 /* Keep the console's shared card grids usable on tablets and phones. */
@@ -124,37 +324,13 @@ table.wos-table tbody tr:hover {
   }
 }
 
-table.wos-table th {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #9ca3af;
-  text-align: left;
-  padding: 10px 12px;
-  background: #fafafa;
-  border-bottom: 1px solid var(--color-line);
-}
-
-table.wos-table td {
-  padding: 9px 12px;
-  font-size: 12px;
-  border-bottom: 1px solid #f3f4f6;
-  color: #111827;
-}
-
-table.wos-table tr:last-child td {
-  border-bottom: none;
-}
-
-/* Toast slide-in animation */
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
