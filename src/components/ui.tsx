@@ -12,10 +12,10 @@ const toneMap: Record<Tone, string> = {
 };
 
 const dotMap: Record<Tone, string> = {
-  success: "bg-success shadow-[0_0_8px_rgb(61_220_151/80%)]",
-  warning: "bg-warning shadow-[0_0_8px_rgb(251_191_77/80%)]",
-  danger: "bg-danger shadow-[0_0_8px_rgb(255_107_129/80%)]",
-  info: "bg-info shadow-[0_0_8px_rgb(76_201_240/80%)]",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  info: "bg-info",
   neutral: "bg-ink-muted",
 };
 
@@ -87,7 +87,7 @@ type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
 const btnVariants: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-white border border-primary/40 shadow-[0_8px_24px_-12px_rgb(124_108_255/85%)] hover:bg-primary-dark",
+    "bg-primary text-white border border-primary/30 shadow-[0_8px_20px_-14px_rgb(70_55_170/50%)] hover:bg-primary-dark",
   secondary:
     "bg-surface-2 text-ink-900 border border-line-strong/80 hover:border-primary/60 hover:bg-surface-3",
   danger:
@@ -136,15 +136,15 @@ export function PanelCard({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-xl border border-line bg-surface/95 shadow-[0_1px_0_rgb(255_255_255/3%)_inset,0_24px_50px_-38px_rgb(0_0_0/90%)]",
+        "overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_2px_10px_rgb(63_49_119/5%),0_18px_42px_-28px_rgb(105_85_232/24%)]",
         className,
       )}
     >
       {title && (
-        <header className="flex items-center justify-between gap-3 border-b border-line/80 bg-gradient-to-r from-surface-2/80 to-surface/40 px-4 py-3.5">
+        <header className="flex items-center justify-between gap-3 border-b border-line/80 bg-surface px-5 py-4">
           <h3 className="flex items-center gap-2.5 text-[13.5px] font-bold tracking-tight text-ink-900">
             {icon && (
-              <span className="grid size-6 place-items-center rounded-md bg-brand-tint text-brand-soft">
+              <span className="grid size-6 place-items-center rounded-md border border-primary/15 bg-brand-tint text-brand-soft shadow-[0_4px_12px_-8px_rgb(105_85_232/55%)]">
                 {icon}
               </span>
             )}
@@ -164,28 +164,29 @@ export function StatCard({
   unit,
   delta,
   icon,
+  iconTone = "brand",
 }: {
   label: string;
   value: ReactNode;
   unit?: string;
   delta?: ReactNode;
   icon?: ReactNode;
+  iconTone?: "brand" | "success";
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-line bg-surface/95 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_18px_38px_-24px_rgb(124_108_255/55%)]">
-      <div className="pointer-events-none absolute -top-12 -right-10 size-28 rounded-full bg-primary/10 blur-2xl transition-opacity duration-300 group-hover:bg-primary/20" />
+    <div className="group relative isolate overflow-hidden rounded-2xl border border-line bg-surface p-4 shadow-[0_2px_10px_rgb(63_49_119/5%),0_18px_42px_-28px_rgb(105_85_232/24%)] transition-all duration-300 before:pointer-events-none before:absolute before:-top-10 before:-right-10 before:z-[-1] before:size-28 before:rounded-full before:bg-primary-tint before:blur-2xl before:opacity-80 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_14px_34px_-20px_rgb(105_85_232/38%)]">
       <div className="relative flex items-start justify-between gap-2">
         <span className="text-[12px] font-medium tracking-wide text-ink-500">
           {label}
         </span>
         {icon && (
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-primary/20 bg-brand-tint text-brand-soft transition-transform duration-300 group-hover:scale-105">
+          <span className={cn("grid size-8 shrink-0 place-items-center rounded-xl border shadow-[0_6px_16px_-12px_rgb(105_85_232/75%)] transition-transform duration-300 group-hover:scale-105", iconTone === "success" ? "border-success/45 bg-success-tint text-success" : "border-primary/25 bg-brand-tint text-brand-soft")}>
             {icon}
           </span>
         )}
       </div>
       <div className="relative mt-3 flex items-baseline gap-1.5">
-        <span className="text-[27px] leading-none font-bold tracking-tight text-ink-900">
+        <span className="text-[29px] leading-none font-bold tracking-tight text-ink-900">
           {value}
         </span>
         {unit && <span className="text-[11.5px] text-ink-muted">{unit}</span>}
@@ -324,7 +325,7 @@ export function Stepper({
                 "grid size-7 place-items-center rounded-full text-[12px] font-bold",
                 done && "bg-success text-[#04110c]",
                 activeStep &&
-                  "bg-primary text-white shadow-[0_0_0_4px_rgb(124_108_255/16%)]",
+                  "bg-primary text-white shadow-[0_0_0_4px_var(--color-primary-tint)]",
                 !done && !activeStep && "bg-surface-3 text-ink-muted",
               )}
             >
@@ -449,7 +450,7 @@ export function Modal({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/65 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/35 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="presentation"
     >
@@ -457,7 +458,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "w-full rounded-2xl border border-line-strong bg-surface p-5 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.95)] animate-scale-in",
+          "w-full rounded-2xl border border-line-strong bg-surface p-5 shadow-[0_24px_80px_-40px_rgba(25,31,53,0.38)] animate-scale-in",
           width,
         )}
         onClick={(e) => e.stopPropagation()}

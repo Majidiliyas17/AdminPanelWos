@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  Building2,
   Eye,
   EyeOff,
   Lock,
@@ -13,6 +12,7 @@ import {
 import { useAdminAuth } from "@/lib/auth";
 import { describeApiError } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function AdminLoginPage() {
   const { user, login } = useAdminAuth();
@@ -42,11 +42,17 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="grid min-h-full lg:grid-cols-[1.05fr_1fr]">
-      <div className="grid place-items-center px-6 py-10 sm:px-10">
-        <form onSubmit={onSubmit} className="w-full max-w-[340px]">
+    <div className="relative grid min-h-full min-w-0 grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
+      <div className="absolute top-5 right-5 z-10"><ThemeToggle /></div>
+      <div className="grid min-w-0 place-items-center px-4 py-10 sm:px-10">
+        <div className="warehouse-scene warehouse-route-scene warehouse-route-scene--compact mb-6 w-full max-w-[340px] lg:hidden" aria-hidden="true">
+          <div className="warehouse-road"><i /></div>
+          <span className="warehouse-truck"><img src="/images/warehouse-truck-v1.png" alt="" draggable="false" /></span>
+          <div className="warehouse-scene__status"><span className="size-2 rounded-full bg-primary" /> Platform route</div>
+        </div>
+        <form onSubmit={onSubmit} className="w-full min-w-0 max-w-[340px]">
           <div className="mb-6 flex items-center gap-2.5">
-            <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-brand-violet text-white shadow-[0_12px_28px_-12px_rgb(124_108_255/90%)]">
+            <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-brand-violet text-white shadow-[0_12px_28px_-12px_rgb(124_108_255/35%)]">
               <Warehouse className="size-5" />
             </span>
             <span className="text-[19px] font-bold tracking-tight text-ink-900">
@@ -121,7 +127,7 @@ export function AdminLoginPage() {
           <button
             type="submit"
             disabled={busy}
-            className="group mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13.5px] font-semibold text-white shadow-[0_14px_30px_-14px_rgb(124_108_255/90%)] hover:bg-primary-dark disabled:opacity-50"
+          className="group mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13.5px] font-semibold text-white shadow-[0_14px_30px_-12px_rgb(105_85_232/48%)] hover:bg-primary-dark disabled:opacity-50"
           >
             {busy ? "Signing in…" : "Sign in to console"}
             {!busy && (
@@ -136,36 +142,26 @@ export function AdminLoginPage() {
         </form>
       </div>
 
-      <aside className="relative hidden overflow-hidden border-l border-line bg-sidebar lg:flex lg:flex-col lg:justify-center">
-        <div className="pointer-events-none absolute inset-0 wos-grid-texture opacity-50" />
-        <div className="pointer-events-none absolute -top-32 -right-20 size-[420px] rounded-full bg-primary/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 size-[340px] rounded-full bg-brand-violet/10 blur-3xl" />
-        <div className="relative px-12 py-14">
-          <span className="inline-flex items-center gap-2 rounded-full border border-success/25 bg-success-tint px-3 py-1 text-[10.5px] font-semibold tracking-[0.08em] text-success uppercase">
-            <span className="size-1.5 rounded-full bg-success" />
-            Platform operations
-          </span>
-          <h2 className="mt-5 max-w-sm text-[30px] leading-tight font-bold tracking-tight text-ink-900">
-            Govern every tenant from one console.
-          </h2>
-          <p className="mt-3 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
-            Approve organizations, provision warehouses, manage plans and audit
-            every platform action.
-          </p>
-          <ul className="mt-9 max-w-sm space-y-4">
-            {[
-              { icon: Building2, text: "Tenant provisioning & lifecycle controls" },
-              { icon: ShieldCheck, text: "Role-scoped platform administration" },
-              { icon: Warehouse, text: "Global feature flags and plan overrides" },
-            ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-primary/25 bg-brand-tint text-brand-soft">
-                  <Icon className="size-4" />
-                </span>
-                <span className="text-[12.5px] text-ink-700">{text}</span>
-              </li>
+      <aside className="auth-visual-panel relative hidden overflow-hidden border-l border-line bg-gradient-to-br from-[#f4f5f8] via-white to-[#f6f4ff] lg:flex lg:flex-col lg:justify-center">
+        <div className="absolute inset-0 warehouse-horizon" />
+        <div className="relative mx-auto w-full max-w-[650px] px-10 py-14 xl:px-14">
+          <span className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-surface/80 px-3 py-1 text-[10.5px] font-semibold tracking-[0.08em] text-success uppercase shadow-sm"><span className="size-1.5 rounded-full bg-success status-dot-live"/> Platform operations</span>
+          <h2 className="mt-5 max-w-lg text-[32px] leading-tight font-bold tracking-tight text-ink-900">A clear view across every warehouse.</h2>
+          <p className="mt-2 max-w-lg text-[13.5px] leading-relaxed text-ink-500">Manage tenants, approvals and plans from one calm command center.</p>
+          <div className="warehouse-scene warehouse-route-scene mt-7">
+            <div className="warehouse-road"><i/></div><span className="warehouse-truck"><img src="/images/warehouse-truck-v1.png" alt="" draggable="false"/></span>
+            <div className="warehouse-scene__status"><span className="size-2 rounded-full bg-brand"/> Platform route preview</div>
+          </div>
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface/85 px-4 py-3 shadow-[0_12px_35px_-28px_rgba(33,42,78,.35)]">
+            {["Review", "Provision", "Manage"].map((step, index) => (
+              <div key={step} className="flex min-w-0 items-center gap-2 text-[11.5px] font-semibold text-ink-700">
+                <span className={`grid size-6 shrink-0 place-items-center rounded-full ${index === 1 ? "bg-primary text-white" : "bg-primary-tint text-primary"}`}>{index + 1}</span>
+                {step}
+                {index < 2 && <span className="ml-1 h-px w-6 shrink-0 bg-line-strong sm:w-10" />}
+              </div>
             ))}
-          </ul>
+          </div>
+          <div className="mt-5 flex items-center gap-2 text-[11.5px] text-ink-500"><ShieldCheck className="size-4 text-success"/> Secure, auditable platform administration</div>
         </div>
       </aside>
     </div>
